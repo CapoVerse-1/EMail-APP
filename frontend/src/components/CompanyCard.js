@@ -9,10 +9,16 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
   const [isSending, setIsSending] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [subject, setSubject] = useState(`${emailType.charAt(0).toUpperCase() + emailType.slice(1)} from Your Company`);
+  
+  // Get the most recent generated email
+  const latestEmail = company.generated_emails && company.generated_emails.length > 0
+    ? company.generated_emails.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+    : null;
+    
+  const [subject, setSubject] = useState(latestEmail?.subject || `${emailType.charAt(0).toUpperCase() + emailType.slice(1)} from Your Company`);
   
   const handleSend = async () => {
-    if (!company.emailContent || !company.email) {
+    if (!latestEmail || !company.email) {
       setErrorMessage('Email content or recipient email is missing');
       return;
     }
@@ -27,13 +33,13 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
     
     try {
       // Send email via Gmail API
-      await sendEmail(company.email, subject, company.emailContent);
+      await sendEmail(gmailApiKey, company.email, subject, latestEmail.content);
       
-      // Save to sent emails history
-      saveSentEmail({
+      // Save to sent emails history in Supabase
+      await saveSentEmail({
         to: company.email,
         subject: subject,
-        content: company.emailContent,
+        content: latestEmail.content,
         company: company.name
       });
       
@@ -160,7 +166,7 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
       {/* Email Content Area */}
       {!isEditing && (
         <div className="p-3 bg-neutral-50 border-t border-neutral-200">
-          {company.generated ? (
+          {latestEmail ? (
             <>
               <div className="flex justify-between items-center mb-2">
                 <h4 className="text-xs font-medium text-neutral-700">Generated Email</h4>
@@ -187,10 +193,10 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
               
               <div className="flex items-center mb-2">
                 <div className="bg-primary-100 text-primary-800 text-xs px-2 py-1 rounded-full mr-2">
-                  {formatEmailType(emailType)}
+                  {formatEmailType(latestEmail.email_type || emailType)}
                 </div>
                 <div className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full">
-                  {model.startsWith('gpt-') ? model.substring(4).toUpperCase() : model}
+                  {(latestEmail.model || model).startsWith('gpt-') ? (latestEmail.model || model).substring(4).toUpperCase() : (latestEmail.model || model)}
                 </div>
               </div>
 
@@ -211,9 +217,8 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
               <div className="bg-white border border-neutral-200 rounded-lg p-2 mb-2">
                 <textarea
                   className="w-full min-h-[120px] outline-none text-xs text-neutral-700 resize-none overflow-auto"
-                  value={company.emailContent}
-                  onChange={(e) => onUpdate('emailContent', e.target.value)}
-                  readOnly={isSent}
+                  value={latestEmail.content}
+                  readOnly={true}
                 />
               </div>
               

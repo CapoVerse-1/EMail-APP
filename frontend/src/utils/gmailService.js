@@ -1,4 +1,5 @@
 // Gmail API service
+import { createSentEmail } from './supabaseService';
 
 // Get the Gmail API key from local storage
 const getGmailApiKey = () => {
@@ -6,9 +7,7 @@ const getGmailApiKey = () => {
 };
 
 // Function to send an email via Gmail API
-const sendEmail = async (to, subject, content) => {
-  const apiKey = getGmailApiKey();
-  
+const sendEmail = async (apiKey, to, subject, content) => {
   if (!apiKey) {
     throw new Error('Gmail API key not found. Please add your API key in the settings page.');
   }
@@ -46,27 +45,18 @@ const sendEmail = async (to, subject, content) => {
   }
 };
 
-// Save sent email to local storage for history
-const saveSentEmail = (emailData) => {
+// Save sent email to Supabase
+const saveSentEmail = async (emailData) => {
   try {
-    // Get existing sent emails from local storage
-    const existingSentEmails = JSON.parse(localStorage.getItem('sent_emails') || '[]');
+    const sentEmail = await createSentEmail({
+      company: emailData.company,
+      to_email: emailData.to,
+      subject: emailData.subject,
+      content: emailData.content,
+      status: 'delivered'
+    });
     
-    // Add new email to the list
-    const updatedSentEmails = [
-      {
-        id: Date.now(),
-        ...emailData,
-        sentAt: new Date().toISOString(),
-        status: 'delivered'
-      },
-      ...existingSentEmails
-    ];
-    
-    // Save back to local storage
-    localStorage.setItem('sent_emails', JSON.stringify(updatedSentEmails));
-    
-    return updatedSentEmails;
+    return sentEmail;
   } catch (error) {
     console.error('Error saving sent email:', error);
     throw error;

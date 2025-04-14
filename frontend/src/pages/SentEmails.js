@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { getSentEmails } from '../utils/gmailService';
+import { motion } from 'framer-motion';
+import { fetchSentEmails } from '../utils/supabaseService';
 
 const SentEmails = () => {
   // State to store sent emails
@@ -9,10 +9,19 @@ const SentEmails = () => {
 
   // Load sent emails on component mount
   useEffect(() => {
-    // Load sent emails from local storage
-    const storedEmails = getSentEmails();
-    setSentEmails(storedEmails);
-    setLoading(false);
+    const loadSentEmails = async () => {
+      setLoading(true);
+      try {
+        const emails = await fetchSentEmails();
+        setSentEmails(emails);
+      } catch (error) {
+        console.error('Error loading sent emails:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadSentEmails();
   }, []);
 
   // State to track the currently hovering email
@@ -148,13 +157,13 @@ Phone: (123) 456-7890`;
             >
               <div>
                 <h3 className="font-medium text-neutral-800">{email.company}</h3>
-                <p className="text-sm text-neutral-500 truncate">{email.to}</p>
+                <p className="text-sm text-neutral-500 truncate">{email.to_email}</p>
               </div>
               
               <div className="truncate">{email.subject}</div>
               
               <div className="text-sm text-neutral-500">
-                {new Date(email.sentAt).toLocaleDateString()}
+                {new Date(email.sent_at).toLocaleDateString()}
               </div>
               
               <div>
@@ -187,12 +196,12 @@ Phone: (123) 456-7890`;
                   <div className="px-6 py-4 border-b border-neutral-200 bg-neutral-50 rounded-t-xl">
                     <div className="flex justify-between items-center mb-2">
                       <div className="font-medium">{email.subject}</div>
-                      <div className="text-xs text-neutral-500">{new Date(email.sentAt).toLocaleString()}</div>
+                      <div className="text-xs text-neutral-500">{new Date(email.sent_at).toLocaleString()}</div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
                         <span className="text-neutral-500">To: </span>
-                        <span>{email.to}</span>
+                        <span>{email.to_email}</span>
                       </div>
                       <div>
                         <span className="text-neutral-500">From: </span>
@@ -204,7 +213,7 @@ Phone: (123) 456-7890`;
                   {/* Email Body */}
                   <div className="p-6 max-h-[400px] overflow-y-auto">
                     <div className="whitespace-pre-line text-neutral-700">
-                      {getExtendedContent(email.id)}
+                      {email.content}
                     </div>
                   </div>
                   

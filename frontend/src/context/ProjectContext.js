@@ -1,4 +1,13 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { 
+  fetchProjects, 
+  getActiveProject, 
+  setProjectActive, 
+  createProject as createProjectApi,
+  updateProject as updateProjectApi,
+  getApiKeys,
+  updateApiKeys
+} from '../utils/supabaseService';
 
 // Create the context
 const ProjectContext = createContext();
@@ -16,112 +25,112 @@ export const ProjectProvider = ({ children }) => {
 
   // Initialize projects on mount
   useEffect(() => {
-    const loadProjects = async () => {
+    const loadData = async () => {
       setIsLoading(true);
       
       try {
-        // Simulate API call to fetch projects
-        // In a real app, this would be replaced with an actual API call
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Load projects from Supabase
+        const projectsData = await fetchProjects();
+        setProjects(projectsData);
         
-        // Mock projects data
-        const mockProjects = [
-          {
-            id: 1,
-            name: 'Default Project',
-            description: 'Your default email generation project',
-            settings: {
-              businessDescription: 'We are a software company specializing in AI-powered automation tools for businesses. Our solutions help streamline workflows and increase productivity.',
-              emailTemplate: 'Dear [Company],\n\nI came across your website and was impressed by your work in [Industry]. I believe our services could greatly benefit your operations.\n\nWould you be available for a quick call next week?\n\nBest regards,\nYour Name',
-              greeting: 'Hello,',
-              outro: 'Looking forward to hearing from you.',
-            },
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }
-        ];
+        // Get active project
+        const active = await getActiveProject();
+        setActiveProject(active);
         
-        setProjects(mockProjects);
-        
-        // Set the active project to the one marked as active
-        const active = mockProjects.find(p => p.isActive);
-        setActiveProject(active || null);
-        
-        // Load API keys from localStorage
-        const savedApiKey = localStorage.getItem('openai_api_key') || '';
-        const savedGmailApiKey = localStorage.getItem('gmail_api_key') || '';
-        setApiKey(savedApiKey);
-        setGmailApiKey(savedGmailApiKey);
+        // Load API keys from Supabase
+        const settings = await getApiKeys();
+        if (settings) {
+          setApiKey(settings.openai_api_key || '');
+          setGmailApiKey(settings.gmail_api_key || '');
+        }
         
       } catch (error) {
-        console.error('Error loading projects:', error);
+        console.error('Error loading data:', error);
       } finally {
         setIsLoading(false);
       }
     };
     
-    loadProjects();
+    loadData();
   }, []);
 
   // Handle project activation/deactivation
-  const toggleProjectActive = (id) => {
-    setProjects(prevProjects => {
-      const updatedProjects = prevProjects.map(project => ({
-        ...project,
-        isActive: project.id === id
-      }));
+  const toggleProjectActive = async (id) => {
+    try {
+      // Update in Supabase
+      const updatedProject = await setProjectActive(id);
+      
+      // Update local state
+      setProjects(prevProjects => {
+        const updatedProjects = prevProjects.map(project => ({
+          ...project,
+          is_active: project.id === id
+        }));
+        return updatedProjects;
+      });
       
       // Set the active project
-      const newActiveProject = updatedProjects.find(p => p.id === id) || null;
-      setActiveProject(newActiveProject);
-      
-      return updatedProjects;
-    });
+      setActiveProject(updatedProject);
+    } catch (error) {
+      console.error('Error activating project:', error);
+    }
   };
 
   // Update API key
-  const updateApiKey = (newKey) => {
-    setApiKey(newKey);
-    localStorage.setItem('openai_api_key', newKey);
+  const updateApiKey = async (newKey) => {
+    try {
+      await updateApiKeys({ openai_api_key: newKey });
+      setApiKey(newKey);
+    } catch (error) {
+      console.error('Error updating OpenAI API key:', error);
+    }
   };
 
   // Update Gmail API key
-  const updateGmailApiKey = (newKey) => {
-    setGmailApiKey(newKey);
-    localStorage.setItem('gmail_api_key', newKey);
+  const updateGmailApiKey = async (newKey) => {
+    try {
+      await updateApiKeys({ gmail_api_key: newKey });
+      setGmailApiKey(newKey);
+    } catch (error) {
+      console.error('Error updating Gmail API key:', error);
+    }
   };
 
   // Add a new project
-  const addProject = (newProject) => {
-    setProjects(prevProjects => [
-      ...prevProjects,
-      {
-        ...newProject,
-        id: Date.now(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isActive: false,
-      }
-    ]);
+  const addProject = async (newProject) => {
+    try {
+      const created = await createProjectApi({
+        name: newProject.name,
+        description: newProject.description,
+        settings: newProject.settings,
+        is_active: false
+      });
+      
+      setProjects(prevProjects => [...prevProjects, created]);
+    } catch (error) {
+      console.error('Error creating project:', error);
+    }
   };
 
   // Update a project
-  const updateProject = (updatedProject) => {
-    setProjects(prevProjects => {
-      const updated = prevProjects.map(project => 
-        project.id === updatedProject.id 
-          ? { ...updatedProject, updatedAt: new Date().toISOString() } 
-          : project
-      );
+  const updateProject = async (updatedProject) => {
+    try {
+      const updated = await updateProjectApi(updatedProject.id, updatedProject);
+      
+      setProjects(prevProjects => {
+        const newProjects = prevProjects.map(project => 
+          project.id === updated.id ? updated : project
+        );
+        return newProjects;
+      });
       
       // If the updated project is active, update the activeProject state
-      if (updatedProject.isActive) {
-        setActiveProject(updatedProject);
+      if (updated.is_active) {
+        setActiveProject(updated);
       }
-      
-      return updated;
-    });
+    } catch (error) {
+      console.error('Error updating project:', error);
+    }
   };
 
   return (
