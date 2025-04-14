@@ -1,40 +1,33 @@
 // Gmail API service
 import { createSentEmail } from './supabaseService';
 
+// API endpoint
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 // Get the Gmail API key from local storage
 const getGmailApiKey = () => {
   return localStorage.getItem('gmail_api_key') || '';
 };
 
-// Function to send an email via Gmail API
-const sendEmail = async (apiKey, to, subject, content) => {
-  if (!apiKey) {
-    throw new Error('Gmail API key not found. Please add your API key in the settings page.');
-  }
-  
+// Function to send an email via Backend
+const sendEmail = async (apiKey = null, to, subject, content) => {
   try {
-    // Format email content as base64 encoded string
-    const emailContent = btoa(
-      `To: ${to}\r\n` +
-      `Subject: ${subject}\r\n\r\n` +
-      `${content}`
-    ).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    
-    // Call Gmail API to send email
-    const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/send?key=${apiKey}`, {
+    // Call backend API to send email
+    const response = await fetch(`${API_URL}/emails/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        raw: emailContent
+        to,
+        subject,
+        content
       })
     });
     
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to send email');
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to send email');
     }
     
     const data = await response.json();

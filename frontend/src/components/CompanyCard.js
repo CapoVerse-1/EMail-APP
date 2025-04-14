@@ -23,17 +23,18 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
       return;
     }
     
-    if (!gmailApiKey) {
-      setErrorMessage('Please add your Gmail API key in the settings page first.');
-      return;
-    }
+    // Remove the API key check since we're using a service account
+    // if (!gmailApiKey) {
+    //   setErrorMessage('Please add your Gmail API key in the settings page first.');
+    //   return;
+    // }
     
     setIsSending(true);
     setErrorMessage('');
     
     try {
-      // Send email via Gmail API
-      await sendEmail(gmailApiKey, company.email, subject, latestEmail.content);
+      // Send email via Gmail API through backend
+      await sendEmail(null, company.email, subject, latestEmail.content);
       
       // Save to sent emails history in Supabase
       await saveSentEmail({
