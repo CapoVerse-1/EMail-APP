@@ -176,32 +176,32 @@ const EmailGenerator = () => {
   };
 
   return (
-    <div className="py-8">
+    <div className="py-6">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-3xl font-bold text-neutral-800 mb-2">Email Generator</h1>
         <p className="text-neutral-500">Import company data and generate personalized emails</p>
       </div>
       
       {/* Settings Section */}
-      <div className="mb-8 p-4 bg-neutral-50 rounded-xl border border-neutral-200">
-        <h2 className="text-lg font-semibold text-neutral-700 mb-4">Generation Settings</h2>
+      <div className="mb-6 p-3 bg-neutral-50 rounded-lg border border-neutral-200 max-w-md">
+        <h2 className="text-md font-semibold text-neutral-700 mb-3">Generation Settings</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-3">
           {/* Email Type Selection */}
           <div>
-            <label htmlFor="emailType" className="block text-sm font-medium text-neutral-600 mb-2">
+            <label htmlFor="emailType" className="block text-xs font-medium text-neutral-600 mb-1">
               Email Type
             </label>
             <select
               id="emailType"
-              className="w-full p-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full p-1.5 text-sm border border-neutral-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               value={selectedEmailType}
               onChange={(e) => setSelectedEmailType(e.target.value)}
             >
               {availableEmailTypes.map(type => (
                 <option key={type.id} value={type.id}>
-                  {type.name} - {type.description}
+                  {type.name}
                 </option>
               ))}
             </select>
@@ -209,18 +209,18 @@ const EmailGenerator = () => {
           
           {/* Model Selection */}
           <div>
-            <label htmlFor="model" className="block text-sm font-medium text-neutral-600 mb-2">
+            <label htmlFor="model" className="block text-xs font-medium text-neutral-600 mb-1">
               AI Model
             </label>
             <select
               id="model"
-              className="w-full p-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full p-1.5 text-sm border border-neutral-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
             >
               {availableModels.map(model => (
                 <option key={model.id} value={model.id}>
-                  {model.name} - {model.description}
+                  {model.name}
                 </option>
               ))}
             </select>
@@ -229,7 +229,7 @@ const EmailGenerator = () => {
       </div>
       
       {/* Action Buttons */}
-      <div className="flex flex-wrap gap-4 mb-8">
+      <div className="flex flex-wrap gap-4 mb-6">
         <button 
           className="btn btn-primary flex items-center space-x-2"
           onClick={() => setIsImportModalOpen(true)}
