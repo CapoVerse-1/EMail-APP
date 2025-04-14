@@ -19,7 +19,7 @@ const Settings = () => {
   const handleActivateProject = (id) => {
     setProjects(projects.map(project => ({
       ...project,
-      isActive: project.id === id
+      isActive: project.id === id ? !project.isActive : project.isActive
     })));
   };
 
@@ -99,14 +99,12 @@ const Settings = () => {
                   Edit
                 </Link>
                 
-                {!project.isActive && (
-                  <button
-                    className="btn btn-primary py-1 px-3 text-xs"
-                    onClick={() => handleActivateProject(project.id)}
-                  >
-                    Activate
-                  </button>
-                )}
+                <button
+                  className="btn btn-primary py-1 px-3 text-xs"
+                  onClick={() => handleActivateProject(project.id)}
+                >
+                  {project.isActive ? 'Deactivate' : 'Activate'}
+                </button>
               </div>
             </div>
           ))}
@@ -183,7 +181,7 @@ const CreateProjectModal = ({ onClose, onCreate }) => {
   const [projectName, setProjectName] = useState('');
   const [description, setDescription] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(33); // Set to first step by default
   
   const steps = [
     {
@@ -209,12 +207,7 @@ const CreateProjectModal = ({ onClose, onCreate }) => {
     outro: 'Looking forward to hearing from you.',
   });
   
-  // Update progress bar based on filled fields
-  useEffect(() => {
-    const totalFields = steps.reduce((acc, step) => acc + step.fields.length, 0);
-    const filledFields = Object.entries(formData).filter(([key, value]) => !!value).length;
-    setProgress(Math.round((filledFields / totalFields) * 100));
-  }, [formData, steps]);
+  // Remove auto-calculation of progress based on filled fields
   
   const handleChange = (field, value) => {
     setFormData({
@@ -226,6 +219,8 @@ const CreateProjectModal = ({ onClose, onCreate }) => {
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
+      // Update progress when moving to next step
+      setProgress(Math.round(((currentStep + 2) / steps.length) * 100));
     } else {
       // Submit form
       onCreate({
@@ -244,6 +239,8 @@ const CreateProjectModal = ({ onClose, onCreate }) => {
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+      // Update progress when moving back
+      setProgress(Math.round(((currentStep) / steps.length) * 100));
     }
   };
   
