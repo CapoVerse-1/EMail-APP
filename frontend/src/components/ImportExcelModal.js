@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import * as XLSX from 'xlsx';
 
 const ImportExcelModal = ({ isOpen, onClose, onImport }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -10,18 +11,31 @@ const ImportExcelModal = ({ isOpen, onClose, onImport }) => {
 
   // Download template function
   const downloadTemplate = () => {
-    // Create sample data in CSV format
-    const csvContent = 
-      "Company Name,Email,Company Description\n" +
-      "Example Company,contact@example.com,A software development company focused on AI solutions.\n" +
-      "Demo Corporation,info@democorp.com,Leading provider of cloud infrastructure services.";
-      
+    // Create sample data for Excel
+    const data = [
+      ['Company Name', 'Email', 'Company Description'],
+      ['Example Company', 'contact@example.com', 'A software development company focused on AI solutions.'],
+      ['Demo Corporation', 'info@democorp.com', 'Leading provider of cloud infrastructure services.']
+    ];
+    
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+    
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Companies');
+    
+    // Generate Excel file
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    
+    // Convert to Blob
+    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
     // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'email_template.csv');
+    link.setAttribute('download', 'companies_template.xlsx');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
