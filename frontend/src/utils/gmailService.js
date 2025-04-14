@@ -1,8 +1,8 @@
 // Gmail API service
 import { createSentEmail } from './supabaseService';
 
-// API endpoint
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// API endpoint - make sure it matches the backend port
+const API_URL = 'http://localhost:5000/api';
 
 // Get the Gmail API key from local storage
 const getGmailApiKey = () => {
@@ -12,6 +12,8 @@ const getGmailApiKey = () => {
 // Function to send an email via Backend
 const sendEmail = async (apiKey = null, to, subject, content) => {
   try {
+    console.log('Sending email to backend:', { to, subject });
+    
     // Call backend API to send email
     const response = await fetch(`${API_URL}/emails/send`, {
       method: 'POST',
@@ -31,6 +33,7 @@ const sendEmail = async (apiKey = null, to, subject, content) => {
     }
     
     const data = await response.json();
+    console.log('Email sent successfully:', data);
     return data;
   } catch (error) {
     console.error('Error sending email:', error);
