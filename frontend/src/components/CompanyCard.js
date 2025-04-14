@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
-const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove }) => {
+const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'introduction', model = 'gpt-3.5-turbo' }) => {
   const [isEditing, setIsEditing] = useState(!company.name); // Auto edit mode for new empty companies
   const [isSending, setIsSending] = useState(false);
   const [isSent, setIsSent] = useState(false);
@@ -16,6 +16,14 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove }) => {
       setIsSending(false);
       setIsSent(true);
     }, 1500);
+  };
+  
+  // Format email type for display
+  const formatEmailType = (type) => {
+    return type
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
   
   return (
@@ -148,6 +156,15 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove }) => {
                 </div>
               </div>
               
+              <div className="flex items-center mb-2">
+                <div className="bg-primary-100 text-primary-800 text-xs px-2 py-1 rounded-full mr-2">
+                  {formatEmailType(emailType)}
+                </div>
+                <div className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full">
+                  {model.startsWith('gpt-') ? model.substring(4).toUpperCase() : model}
+                </div>
+              </div>
+              
               <div className="bg-white border border-neutral-200 rounded-lg p-2 mb-2">
                 <textarea
                   className="w-full min-h-[120px] outline-none text-xs text-neutral-700 resize-none overflow-auto"
@@ -201,6 +218,14 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove }) => {
               <p className="text-xs text-neutral-500 mb-2">
                 Click "Generate All Emails" to create personalized content.
               </p>
+              <div className="flex justify-center items-center space-x-2">
+                <div className="bg-primary-100 text-primary-800 text-xs px-2 py-1 rounded-full">
+                  {formatEmailType(emailType)}
+                </div>
+                <div className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full">
+                  {model.startsWith('gpt-') ? model.substring(4).toUpperCase() : model}
+                </div>
+              </div>
             </div>
           )}
         </div>

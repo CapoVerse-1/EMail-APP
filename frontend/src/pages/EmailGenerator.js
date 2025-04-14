@@ -3,13 +3,15 @@ import { motion } from 'framer-motion';
 import ImportExcelModal from '../components/ImportExcelModal';
 import CompanyCard from '../components/CompanyCard';
 import { useProjectContext } from '../context/ProjectContext';
-import { generateEmail } from '../utils/openaiService';
+import { generateEmail, availableModels, availableEmailTypes } from '../utils/openaiService';
 
 const EmailGenerator = () => {
   const { activeProject, apiKey } = useProjectContext();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gpt-3.5-turbo');
+  const [selectedEmailType, setSelectedEmailType] = useState('introduction');
   
   // Sample companies for demonstration
   const sampleCompanies = [
@@ -81,8 +83,11 @@ const EmailGenerator = () => {
       for (let i = 0; i < updatedCompanies.length; i++) {
         const company = updatedCompanies[i];
         try {
-          // Generate email using the OpenAI service
-          const emailContent = await generateEmail(activeProject, company);
+          // Generate email using the OpenAI service with selected options
+          const emailContent = await generateEmail(activeProject, company, {
+            emailType: selectedEmailType,
+            model: selectedModel
+          });
           
           // Update the company with the generated email
           updatedCompanies[i] = {
@@ -142,8 +147,11 @@ const EmailGenerator = () => {
     ));
     
     try {
-      // Generate a new email for this company
-      const emailContent = await generateEmail(activeProject, company);
+      // Generate a new email for this company with selected options
+      const emailContent = await generateEmail(activeProject, company, {
+        emailType: selectedEmailType,
+        model: selectedModel
+      });
       
       // Update the company with the new email
       setCompanies(companies.map(c => 
@@ -173,6 +181,51 @@ const EmailGenerator = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-neutral-800 mb-2">Email Generator</h1>
         <p className="text-neutral-500">Import company data and generate personalized emails</p>
+      </div>
+      
+      {/* Settings Section */}
+      <div className="mb-8 p-4 bg-neutral-50 rounded-xl border border-neutral-200">
+        <h2 className="text-lg font-semibold text-neutral-700 mb-4">Generation Settings</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Email Type Selection */}
+          <div>
+            <label htmlFor="emailType" className="block text-sm font-medium text-neutral-600 mb-2">
+              Email Type
+            </label>
+            <select
+              id="emailType"
+              className="w-full p-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              value={selectedEmailType}
+              onChange={(e) => setSelectedEmailType(e.target.value)}
+            >
+              {availableEmailTypes.map(type => (
+                <option key={type.id} value={type.id}>
+                  {type.name} - {type.description}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Model Selection */}
+          <div>
+            <label htmlFor="model" className="block text-sm font-medium text-neutral-600 mb-2">
+              AI Model
+            </label>
+            <select
+              id="model"
+              className="w-full p-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+            >
+              {availableModels.map(model => (
+                <option key={model.id} value={model.id}>
+                  {model.name} - {model.description}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
       
       {/* Action Buttons */}
@@ -268,6 +321,8 @@ const EmailGenerator = () => {
                 onUpdate={(field, value) => handleUpdateCompany(company.id, field, value)}
                 onRegenerate={() => handleRegenerateEmail(company.id)}
                 onRemove={() => handleRemoveCompany(company.id)}
+                emailType={selectedEmailType}
+                model={selectedModel}
               />
             </div>
           ))}
