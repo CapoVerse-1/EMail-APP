@@ -1,40 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useProjectContext } from '../context/ProjectContext';
 
 const Settings = () => {
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      name: 'Default Project',
-      description: 'Your default email generation project',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-  ]);
-
+  const { 
+    projects, 
+    apiKey, 
+    toggleProjectActive,
+    updateApiKey, 
+    addProject 
+  } = useProjectContext();
+  
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [tempApiKey, setTempApiKey] = useState(apiKey);
 
   const handleActivateProject = (id) => {
-    setProjects(projects.map(project => ({
-      ...project,
-      isActive: project.id === id ? !project.isActive : project.isActive
-    })));
+    toggleProjectActive(id);
   };
 
   const handleCreateProject = (newProject) => {
-    setProjects([
-      ...projects,
-      {
-        ...newProject,
-        id: Date.now(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isActive: false,
-      }
-    ]);
+    addProject(newProject);
     setIsCreateModalOpen(false);
+  };
+
+  const handleSaveSettings = () => {
+    updateApiKey(tempApiKey);
   };
 
   return (
@@ -125,8 +116,8 @@ const Settings = () => {
                 type="password"
                 className="input"
                 placeholder="sk-..."
-                value="sk-••••••••••••••••••••••••••••••"
-                onChange={() => {}}
+                value={tempApiKey}
+                onChange={(e) => setTempApiKey(e.target.value)}
               />
               <p className="mt-1 text-xs text-neutral-500">
                 Your API key is stored securely and used for email generation.
@@ -157,7 +148,10 @@ const Settings = () => {
             </div>
             
             <div className="flex justify-end">
-              <button className="btn btn-primary">
+              <button 
+                className="btn btn-primary"
+                onClick={handleSaveSettings}
+              >
                 Save Settings
               </button>
             </div>

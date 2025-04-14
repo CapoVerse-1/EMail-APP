@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import ImportExcelModal from '../components/ImportExcelModal';
 import CompanyCard from '../components/CompanyCard';
+import { useProjectContext } from '../context/ProjectContext';
+import { generateEmail } from '../utils/openaiService';
 
 const EmailGenerator = () => {
+  const { activeProject, apiKey } = useProjectContext();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -57,20 +60,56 @@ const EmailGenerator = () => {
     ]);
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    if (!apiKey) {
+      alert('Please add your OpenAI API key in the settings page first.');
+      return;
+    }
+    
+    if (!activeProject) {
+      alert('Please activate a project in the settings page first.');
+      return;
+    }
+    
     setIsGenerating(true);
     
-    // Simulate API call with timeout
-    setTimeout(() => {
-      const updatedCompanies = companies.map(company => ({
-        ...company,
-        generated: true,
-        emailContent: `Dear ${company.name} team,\n\nI recently came across your company and was impressed by your work in ${company.description.split(' ').slice(0, 3).join(' ')}...\n\nI believe our services could greatly benefit your operations. Would you be available for a brief call next week?\n\nBest regards,\nYour Name`
-      }));
+    try {
+      // Create a copy of the companies array to update
+      const updatedCompanies = [...companies];
       
-      setCompanies(updatedCompanies);
+      // Generate emails for each company in sequence
+      for (let i = 0; i < updatedCompanies.length; i++) {
+        const company = updatedCompanies[i];
+        try {
+          // Generate email using the OpenAI service
+          const emailContent = await generateEmail(activeProject, company);
+          
+          // Update the company with the generated email
+          updatedCompanies[i] = {
+            ...company,
+            generated: true,
+            emailContent
+          };
+          
+          // Update the state after each company is processed
+          setCompanies([...updatedCompanies]);
+        } catch (error) {
+          console.error(`Error generating email for ${company.name}:`, error);
+          // If there's an error, still mark as generated but with an error message
+          updatedCompanies[i] = {
+            ...company,
+            generated: true,
+            emailContent: `Error generating email: ${error.message}`
+          };
+          setCompanies([...updatedCompanies]);
+        }
+      }
+    } catch (error) {
+      console.error('Error in generation process:', error);
+      alert(`Error generating emails: ${error.message}`);
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
   const handleRemoveCompany = (id) => {
@@ -83,7 +122,17 @@ const EmailGenerator = () => {
     ));
   };
 
-  const handleRegenerateEmail = (id) => {
+  const handleRegenerateEmail = async (id) => {
+    if (!apiKey) {
+      alert('Please add your OpenAI API key in the settings page first.');
+      return;
+    }
+    
+    if (!activeProject) {
+      alert('Please activate a project in the settings page first.');
+      return;
+    }
+    
     const company = companies.find(c => c.id === id);
     if (!company) return;
     
@@ -92,16 +141,30 @@ const EmailGenerator = () => {
       c.id === id ? { ...c, isRegenerating: true } : c
     ));
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Generate a new email for this company
+      const emailContent = await generateEmail(activeProject, company);
+      
+      // Update the company with the new email
       setCompanies(companies.map(c => 
         c.id === id ? { 
           ...c, 
           isRegenerating: false,
-          emailContent: `Dear ${c.name} team,\n\nI was researching companies in your industry and was particularly interested in your approach to ${c.description.split(' ').slice(0, 4).join(' ')}...\n\nI'd love to discuss how we might collaborate. Are you open to a conversation?\n\nWarm regards,\nYour Name`
+          emailContent
         } : c
       ));
-    }, 1500);
+    } catch (error) {
+      console.error(`Error regenerating email for ${company.name}:`, error);
+      
+      // Update with error message
+      setCompanies(companies.map(c => 
+        c.id === id ? { 
+          ...c, 
+          isRegenerating: false,
+          emailContent: `Error generating email: ${error.message}`
+        } : c
+      ));
+    }
   };
 
   return (
@@ -138,7 +201,8 @@ const EmailGenerator = () => {
           <button 
             className="btn btn-secondary flex items-center space-x-2"
             onClick={handleGenerate}
-            disabled={isGenerating}
+            disabled={isGenerating || !apiKey || !activeProject}
+            title={!apiKey ? 'API key required in settings' : !activeProject ? 'Activate a project in settings' : ''}
           >
             {isGenerating ? (
               <>

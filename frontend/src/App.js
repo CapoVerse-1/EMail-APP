@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ProjectProvider } from './context/ProjectContext';
+import Layout from './components/Layout';
 import './App.css';
 
 // Pages
@@ -17,22 +19,24 @@ function App() {
   const basename = process.env.PUBLIC_URL || '';
 
   return (
-    <Router basename={basename}>
-      <div className="App">
-        <Navbar />
-        <main className="app-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/email-generator" element={<EmailGenerator />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/project-settings/:id" element={<ProjectSettings />} />
-            <Route path="/sent-emails" element={<SentEmails />} />
-            {/* Add a catch-all route to handle 404s */}
-            <Route path="*" element={<Dashboard />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <ProjectProvider>
+      <Router basename={basename}>
+        <Layout>
+          <Navbar />
+          <main className="app-content">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/email-generator" element={<EmailGenerator />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/project-settings/:id" element={<ProjectSettings />} />
+              <Route path="/sent-emails" element={<SentEmails />} />
+              {/* Add a catch-all route to handle 404s */}
+              <Route path="*" element={<Dashboard />} />
+            </Routes>
+          </main>
+        </Layout>
+      </Router>
+    </ProjectProvider>
   );
 }
 
