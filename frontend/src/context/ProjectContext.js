@@ -10,6 +10,7 @@ export const useProjectContext = () => useContext(ProjectContext);
 export const ProjectProvider = ({ children }) => {
   const [activeProject, setActiveProject] = useState(null);
   const [apiKey, setApiKey] = useState('');
+  const [gmailApiKey, setGmailApiKey] = useState('');
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,9 +48,11 @@ export const ProjectProvider = ({ children }) => {
         const active = mockProjects.find(p => p.isActive);
         setActiveProject(active || null);
         
-        // Load API key from localStorage
+        // Load API keys from localStorage
         const savedApiKey = localStorage.getItem('openai_api_key') || '';
+        const savedGmailApiKey = localStorage.getItem('gmail_api_key') || '';
         setApiKey(savedApiKey);
+        setGmailApiKey(savedGmailApiKey);
         
       } catch (error) {
         console.error('Error loading projects:', error);
@@ -81,6 +84,12 @@ export const ProjectProvider = ({ children }) => {
   const updateApiKey = (newKey) => {
     setApiKey(newKey);
     localStorage.setItem('openai_api_key', newKey);
+  };
+
+  // Update Gmail API key
+  const updateGmailApiKey = (newKey) => {
+    setGmailApiKey(newKey);
+    localStorage.setItem('gmail_api_key', newKey);
   };
 
   // Add a new project
@@ -121,9 +130,11 @@ export const ProjectProvider = ({ children }) => {
         projects,
         activeProject,
         apiKey,
+        gmailApiKey,
         isLoading,
         toggleProjectActive,
         updateApiKey,
+        updateGmailApiKey,
         addProject,
         updateProject
       }}

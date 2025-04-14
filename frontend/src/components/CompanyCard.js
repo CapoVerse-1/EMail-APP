@@ -1,21 +1,50 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useProjectContext } from '../context/ProjectContext';
+import { sendEmail, saveSentEmail } from '../utils/gmailService';
 
 const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'introduction', model = 'gpt-3.5-turbo' }) => {
+  const { gmailApiKey } = useProjectContext();
   const [isEditing, setIsEditing] = useState(!company.name); // Auto edit mode for new empty companies
   const [isSending, setIsSending] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [subject, setSubject] = useState(`${emailType.charAt(0).toUpperCase() + emailType.slice(1)} from Your Company`);
   
-  const handleSend = () => {
-    if (!company.emailContent) return;
+  const handleSend = async () => {
+    if (!company.emailContent || !company.email) {
+      setErrorMessage('Email content or recipient email is missing');
+      return;
+    }
+    
+    if (!gmailApiKey) {
+      setErrorMessage('Please add your Gmail API key in the settings page first.');
+      return;
+    }
     
     setIsSending(true);
+    setErrorMessage('');
     
-    // Simulate sending email
-    setTimeout(() => {
-      setIsSending(false);
+    try {
+      // Send email via Gmail API
+      await sendEmail(company.email, subject, company.emailContent);
+      
+      // Save to sent emails history
+      saveSentEmail({
+        to: company.email,
+        subject: subject,
+        content: company.emailContent,
+        company: company.name
+      });
+      
       setIsSent(true);
-    }, 1500);
+      
+    } catch (error) {
+      console.error('Error sending email:', error);
+      setErrorMessage(error.message || 'Failed to send email');
+    } finally {
+      setIsSending(false);
+    }
   };
   
   // Format email type for display
@@ -164,14 +193,35 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
                   {model.startsWith('gpt-') ? model.substring(4).toUpperCase() : model}
                 </div>
               </div>
+
+              {/* Email Subject */}
+              {!isSent && (
+                <div className="mb-2">
+                  <label className="block text-xs font-medium text-neutral-600 mb-1">Subject Line</label>
+                  <input
+                    type="text"
+                    className="input text-xs"
+                    placeholder="Enter email subject"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                  />
+                </div>
+              )}
               
               <div className="bg-white border border-neutral-200 rounded-lg p-2 mb-2">
                 <textarea
                   className="w-full min-h-[120px] outline-none text-xs text-neutral-700 resize-none overflow-auto"
                   value={company.emailContent}
                   onChange={(e) => onUpdate('emailContent', e.target.value)}
+                  readOnly={isSent}
                 />
               </div>
+              
+              {errorMessage && (
+                <div className="text-red-500 text-xs mb-2">
+                  {errorMessage}
+                </div>
+              )}
               
               <div className="flex justify-end">
                 {isSent ? (
@@ -185,7 +235,8 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
                   <button 
                     className="btn btn-primary btn-sm flex items-center space-x-1"
                     onClick={handleSend}
-                    disabled={isSending}
+                    disabled={isSending || !company.email}
+                    title={!company.email ? 'Recipient email required' : ''}
                   >
                     {isSending ? (
                       <>

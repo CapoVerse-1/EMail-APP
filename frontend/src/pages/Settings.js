@@ -7,13 +7,16 @@ const Settings = () => {
   const { 
     projects, 
     apiKey, 
+    gmailApiKey,
     toggleProjectActive,
     updateApiKey, 
+    updateGmailApiKey,
     addProject 
   } = useProjectContext();
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [tempApiKey, setTempApiKey] = useState(apiKey);
+  const [tempGmailApiKey, setTempGmailApiKey] = useState(gmailApiKey);
 
   const handleActivateProject = (id) => {
     toggleProjectActive(id);
@@ -26,6 +29,7 @@ const Settings = () => {
 
   const handleSaveSettings = () => {
     updateApiKey(tempApiKey);
+    updateGmailApiKey(tempGmailApiKey);
   };
 
   return (
@@ -121,6 +125,22 @@ const Settings = () => {
               />
               <p className="mt-1 text-xs text-neutral-500">
                 Your API key is stored securely and used for email generation.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                API Key for Gmail
+              </label>
+              <input
+                type="password"
+                className="input"
+                placeholder="Enter your Gmail API key..."
+                value={tempGmailApiKey}
+                onChange={(e) => setTempGmailApiKey(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-neutral-500">
+                Your Gmail API key is used to send emails directly from the application.
               </p>
             </div>
             

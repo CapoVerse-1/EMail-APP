@@ -1,37 +1,19 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { getSentEmails } from '../utils/gmailService';
 
 const SentEmails = () => {
-  // Sample sent emails data
-  const [sentEmails, setSentEmails] = useState([
-    {
-      id: 1,
-      to: 'contact@acmecorp.com',
-      subject: 'Partnership Opportunity with Our Company',
-      content: 'Dear Acme Corporation team,\n\nI recently came across your company and was impressed by your work in innovative technology solutions. I believe there could be some great opportunities for collaboration between our organizations.',
-      sentAt: '2023-04-10T14:30:00Z',
-      company: 'Acme Corporation',
-      status: 'delivered'
-    },
-    {
-      id: 2,
-      to: 'hello@techvision.io',
-      subject: 'Collaboration Proposal for TechVision',
-      content: 'Dear TechVision team,\n\nI was researching companies in your industry and was particularly interested in your approach to AI-powered analytics. Your innovative solutions align well with our goals for the upcoming quarter.',
-      sentAt: '2023-04-09T11:15:00Z',
-      company: 'TechVision Inc.',
-      status: 'opened'
-    },
-    {
-      id: 3,
-      to: 'info@globex.com',
-      subject: 'How we can help Globex optimize operations',
-      content: 'Hello Globex team,\n\nI noticed that your company has been expanding rapidly in the past year. First of all, congratulations on your growth and success!',
-      sentAt: '2023-04-05T09:45:00Z',
-      company: 'Globex Corporation',
-      status: 'replied'
-    }
-  ]);
+  // State to store sent emails
+  const [sentEmails, setSentEmails] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load sent emails on component mount
+  useEffect(() => {
+    // Load sent emails from local storage
+    const storedEmails = getSentEmails();
+    setSentEmails(storedEmails);
+    setLoading(false);
+  }, []);
 
   // State to track the currently hovering email
   const [hoveredEmailId, setHoveredEmailId] = useState(null);
@@ -145,7 +127,11 @@ Phone: (123) 456-7890`;
           <div className="text-sm font-medium text-neutral-500">Status</div>
         </div>
 
-        {sentEmails.length === 0 ? (
+        {loading ? (
+          <div className="p-8 text-center">
+            <p className="text-neutral-500">Loading sent emails...</p>
+          </div>
+        ) : sentEmails.length === 0 ? (
           <div className="p-8 text-center">
             <p className="text-neutral-500">No emails have been sent yet.</p>
           </div>
