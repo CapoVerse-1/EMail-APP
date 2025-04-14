@@ -198,7 +198,7 @@ const EmailGenerator = () => {
       {companies.length > 0 && (
         <div className="flex flex-wrap gap-6 mt-6 px-1 bg-neutral-50 rounded-xl p-6">
           {companies.map(company => (
-            <div key={company.id} className="w-full sm:w-[calc(50%-12px)] md:w-[calc(33.33%-16px)] lg:w-[calc(25%-18px)] 2xl:w-[calc(20%-19.2px)] bg-white rounded-xl shadow-sm">
+            <div key={company.id} className="w-full sm:w-[calc(50%-12px)] md:w-[calc(33.33%-16px)] lg:w-[calc(25%-18px)] 2xl:w-[calc(20%-19.2px)] bg-white rounded-xl">
               <CompanyCard
                 company={company}
                 onUpdate={(field, value) => handleUpdateCompany(company.id, field, value)}
