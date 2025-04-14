@@ -26,4 +26,7 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
-*.sw? 
+*.sw?
+
+# Sensitive files
+/backend/credentials/*.json 
