@@ -196,9 +196,9 @@ const EmailGenerator = () => {
       
       {/* Company Cards */}
       {companies.length > 0 && (
-        <div className="flex flex-wrap mt-6 mx-[-0.25rem]">
+        <div className="flex flex-wrap mt-6">
           {companies.map(company => (
-            <div key={company.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 2xl:w-1/5 p-1">
+            <div key={company.id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 2xl:w-1/5 p-2">
               <CompanyCard
                 company={company}
                 onUpdate={(field, value) => handleUpdateCompany(company.id, field, value)}
