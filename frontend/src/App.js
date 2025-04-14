@@ -13,8 +13,11 @@ import SentEmails from './pages/SentEmails';
 import Navbar from './components/Navbar';
 
 function App() {
+  // Get the base URL from the environment or default to '/'
+  const basename = process.env.PUBLIC_URL || '';
+
   return (
-    <Router>
+    <Router basename={basename}>
       <div className="App">
         <Navbar />
         <main className="app-content">
@@ -24,6 +27,8 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/project-settings/:id" element={<ProjectSettings />} />
             <Route path="/sent-emails" element={<SentEmails />} />
+            {/* Add a catch-all route to handle 404s */}
+            <Route path="*" element={<Dashboard />} />
           </Routes>
         </main>
       </div>
