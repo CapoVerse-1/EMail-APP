@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { getProjectById, updateProject } from '../utils/supabaseService';
 
 const ProjectSettings = () => {
   const { id } = useParams();
@@ -7,47 +8,49 @@ const ProjectSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [settings, setSettings] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Mock project data
-  const mockProject = {
-    id: 1,
-    name: 'Default Project',
-    description: 'Your default email generation project',
-    settings: {
-      businessDescription: 'We are a software company specializing in AI-powered automation tools for businesses. Our solutions help streamline workflows and increase productivity.',
-      emailTemplate: 'Dear [Company],\n\nI came across your website and was impressed by your work in [Industry]. I believe our services could greatly benefit your operations.\n\nWould you be available for a quick call next week?\n\nBest regards,\nYour Name',
-      greeting: 'Hello,',
-      outro: 'Looking forward to hearing from you.',
-    },
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
+  const [error, setError] = useState(null);
 
   // Fetch project settings
   useEffect(() => {
-    // Simulate API call
     const fetchProjectSettings = async () => {
       setIsLoading(true);
+      setError(null);
       
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Use mock data for the project with matching id
-      if (id === '1') {
-        setSettings(mockProject);
-      } else {
-        // If no matching project, navigate back to settings
-        navigate('/settings');
+      try {
+        // Get real project data from Supabase
+        const projectData = await getProjectById(id);
+        
+        // Make sure settings is an object even if it's null in the database
+        if (!projectData.settings) {
+          projectData.settings = {
+            businessDescription: '',
+            emailTemplate: '',
+            greeting: 'Hello,',
+            outro: 'Looking forward to hearing from you.',
+          };
+        }
+        
+        setSettings(projectData);
+      } catch (error) {
+        console.error('Error fetching project:', error);
+        setError('Failed to load project. Please try again.');
+        // If there's an error, navigate back to settings after a short delay
+        setTimeout(() => {
+          navigate('/settings');
+        }, 2000);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
     
-    fetchProjectSettings();
+    if (id) {
+      fetchProjectSettings();
+    }
   }, [id, navigate]);
 
   const handleChange = (field, value) => {
+    if (!settings) return;
+    
     setSettings({
       ...settings,
       [field]: value,
@@ -55,6 +58,8 @@ const ProjectSettings = () => {
   };
 
   const handleSettingsChange = (field, value) => {
+    if (!settings || !settings.settings) return;
+    
     setSettings({
       ...settings,
       settings: {
@@ -65,18 +70,26 @@ const ProjectSettings = () => {
   };
 
   const handleSave = async () => {
+    if (!settings) return;
+    
     setIsSaving(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Update updatedAt timestamp
-    setSettings({
-      ...settings,
-      updatedAt: new Date().toISOString(),
-    });
-    
-    setIsSaving(false);
+    try {
+      // Save to Supabase
+      await updateProject(settings.id, {
+        name: settings.name,
+        description: settings.description,
+        settings: settings.settings
+      });
+      
+      // Navigate back to settings page
+      navigate('/settings');
+    } catch (error) {
+      console.error('Error saving project:', error);
+      setError('Failed to save changes. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (isLoading) {
@@ -85,6 +98,38 @@ const ProjectSettings = () => {
         <div className="animate-pulse flex flex-col items-center">
           <div className="h-8 w-64 bg-neutral-200 rounded mb-4"></div>
           <div className="h-4 w-48 bg-neutral-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="py-8 flex justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-neutral-700 mb-2">{error}</h3>
+          <p className="text-neutral-500">Redirecting to settings page...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!settings) {
+    return (
+      <div className="py-8 flex justify-center">
+        <div className="text-center">
+          <h3 className="text-xl font-semibold text-neutral-700 mb-2">Project not found</h3>
+          <button 
+            className="btn btn-primary mt-4"
+            onClick={() => navigate('/settings')}
+          >
+            Return to Settings
+          </button>
         </div>
       </div>
     );
