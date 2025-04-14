@@ -2,7 +2,10 @@
 
 // Get the API key from local storage or settings
 const getApiKey = () => {
-  return localStorage.getItem('openai_api_key') || '';
+  // First try to get from ProjectContext (which loads from Supabase)
+  // If that fails, fall back to localStorage (for legacy support)
+  const contextKey = window.apiKeyFromContext || '';
+  return contextKey || localStorage.getItem('openai_api_key') || '';
 };
 
 // Email types with their specific instructions

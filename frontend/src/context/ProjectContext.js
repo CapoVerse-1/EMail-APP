@@ -40,7 +40,11 @@ export const ProjectProvider = ({ children }) => {
         // Load API keys from Supabase
         const settings = await getApiKeys();
         if (settings) {
-          setApiKey(settings.openai_api_key || '');
+          const openaiKey = settings.openai_api_key || '';
+          setApiKey(openaiKey);
+          // Make API key available globally for the openaiService
+          window.apiKeyFromContext = openaiKey;
+          
           setGmailApiKey(settings.gmail_api_key || '');
         }
         
@@ -81,6 +85,8 @@ export const ProjectProvider = ({ children }) => {
     try {
       await updateApiKeys({ openai_api_key: newKey });
       setApiKey(newKey);
+      // Update the global variable when API key changes
+      window.apiKeyFromContext = newKey;
     } catch (error) {
       console.error('Error updating OpenAI API key:', error);
     }
