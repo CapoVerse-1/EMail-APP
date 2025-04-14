@@ -71,7 +71,7 @@ const Settings = () => {
               </div>
               
               <div>
-                {project.isActive ? (
+                {project.is_active ? (
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     Active
                   </span>
@@ -83,7 +83,7 @@ const Settings = () => {
               </div>
               
               <div className="text-sm text-neutral-500">
-                {new Date(project.updatedAt).toLocaleDateString()}
+                {new Date(project.updated_at || project.updatedAt).toLocaleDateString()}
               </div>
               
               <div className="flex space-x-2">
@@ -98,7 +98,7 @@ const Settings = () => {
                   className="btn btn-primary py-1 px-3 text-xs"
                   onClick={() => handleActivateProject(project.id)}
                 >
-                  {project.isActive ? 'Deactivate' : 'Activate'}
+                  {project.is_active ? 'Deactivate' : 'Activate'}
                 </button>
               </div>
             </div>
