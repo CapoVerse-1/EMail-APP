@@ -1,25 +1,33 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
+
+// Pages
+import Dashboard from './pages/Dashboard';
+import EmailGenerator from './pages/EmailGenerator';
+import Settings from './pages/Settings';
+import ProjectSettings from './pages/ProjectSettings';
+import SentEmails from './pages/SentEmails';
+
+// Components
+import Navbar from './components/Navbar';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Email Automation Tool</h1>
-        <div className="landing-cards">
-          <div className="card">
-            <h2>Email Generator</h2>
-            <p>Generate personalized emails from your Excel data</p>
-            <button className="btn-primary">Get Started</button>
-          </div>
-          <div className="card">
-            <h2>AI Agent</h2>
-            <p>Search the web for companies and contact information</p>
-            <button className="btn-secondary">Coming Soon</button>
-          </div>
-        </div>
-      </header>
-    </div>
+    <Router>
+      <div className="App">
+        <Navbar />
+        <main className="app-content">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/email-generator" element={<EmailGenerator />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/project-settings/:id" element={<ProjectSettings />} />
+            <Route path="/sent-emails" element={<SentEmails />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }
 

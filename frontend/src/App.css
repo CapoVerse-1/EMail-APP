@@ -20,7 +20,11 @@ body {
 }
 
 .App {
-  text-align: center;
+  @apply min-h-screen bg-neutral-50;
+}
+
+.app-content {
+  @apply container mx-auto px-4 py-8 max-w-7xl;
 }
 
 .App-logo {
@@ -126,5 +130,53 @@ button {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Loading animations */
+.loading-pulse {
+  @apply relative overflow-hidden bg-neutral-200 rounded-md;
+}
+
+.loading-pulse::after {
+  @apply absolute top-0 right-0 bottom-0 left-0 transform translate-x-full;
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.3) 20%,
+    rgba(255, 255, 255, 0.6) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  animation: shimmer 2s infinite;
+  content: '';
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(-100%);
   }
 }
