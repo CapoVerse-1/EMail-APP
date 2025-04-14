@@ -46,21 +46,38 @@ const EmailGenerator = () => {
     try {
       // Process the imported data
       const newCompaniesPromises = data.map(async (item) => {
+        // Handle different possible column names from Excel
+        const companyName = item['Company Name'] || item['company'] || item['Company'] || item['company name'] || item['Name'] || '';
+        const email = item['Email'] || item['email'] || item['Company Email'] || item['company email'] || '';
+        const description = item['Company Description'] || item['description'] || item['company description'] || item['Description'] || '';
+        
         const newCompany = {
           project_id: activeProject.id,
-          name: item.company || item['Company Name'] || '',
-          email: item.email || item['Email'] || '',
-          description: item.description || item['Company Description'] || '',
+          name: companyName,
+          email: email,
+          description: description,
         };
         
-        return await createCompany(newCompany);
+        // Only create companies that have at least a name
+        if (newCompany.name) {
+          return await createCompany(newCompany);
+        }
+        return null;
       });
       
-      const newCompanies = await Promise.all(newCompaniesPromises);
-      setCompanies([...companies, ...newCompanies]);
+      const newCompanies = (await Promise.all(newCompaniesPromises)).filter(company => company !== null);
+      
+      if (newCompanies.length === 0) {
+        alert('No valid companies found in the import. Please check your file format.');
+      } else {
+        setCompanies([...companies, ...newCompanies]);
+        console.log(`Successfully imported ${newCompanies.length} companies`);
+      }
+      
       setIsImportModalOpen(false);
     } catch (error) {
       console.error('Error importing companies:', error);
+      alert(`Error importing companies: ${error.message}`);
     }
   };
 

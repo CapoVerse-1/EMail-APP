@@ -95,26 +95,44 @@ const ImportExcelModal = ({ isOpen, onClose, onImport }) => {
     
     setIsLoading(true);
     
-    // Simulate API call for parsing Excel/CSV
-    setTimeout(() => {
-      // Mock successful import
-      const mockData = [
-        {
-          'Company Name': 'Acme Corporation',
-          'Email': 'contact@acmecorp.com',
-          'Company Description': 'A global leader in innovative technology solutions for enterprise businesses.'
-        },
-        {
-          'Company Name': 'TechVision Inc.',
-          'Email': 'hello@techvision.io',
-          'Company Description': 'Specializes in AI-powered analytics and business intelligence platforms.'
+    // Read the uploaded Excel file
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const data = e.target.result;
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Get the first sheet
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // Convert to JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        if (jsonData.length === 0) {
+          setError('No data found in the file');
+          setIsLoading(false);
+          return;
         }
-      ];
-      
-      onImport(mockData);
+        
+        // Pass the data to the parent component
+        onImport(jsonData);
+        setIsLoading(false);
+        setFile(null);
+      } catch (error) {
+        console.error('Error parsing Excel file:', error);
+        setError('Error parsing the file. Please check the format.');
+        setIsLoading(false);
+      }
+    };
+    
+    reader.onerror = () => {
+      setError('Error reading the file');
       setIsLoading(false);
-      setFile(null);
-    }, 1500);
+    };
+    
+    reader.readAsArrayBuffer(file);
   };
 
   // If modal is not open, don't render anything
