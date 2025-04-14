@@ -11,12 +11,14 @@ const Settings = () => {
     toggleProjectActive,
     updateApiKey, 
     updateGmailApiKey,
-    addProject 
+    addProject,
+    deleteProject
   } = useProjectContext();
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [tempApiKey, setTempApiKey] = useState(apiKey);
   const [tempGmailApiKey, setTempGmailApiKey] = useState(gmailApiKey);
+  const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, projectId: null });
 
   const handleActivateProject = (id) => {
     toggleProjectActive(id);
@@ -25,6 +27,21 @@ const Settings = () => {
   const handleCreateProject = (newProject) => {
     addProject(newProject);
     setIsCreateModalOpen(false);
+  };
+
+  const handleDeleteClick = (id) => {
+    setDeleteConfirmation({ isOpen: true, projectId: id });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteConfirmation.projectId) {
+      await deleteProject(deleteConfirmation.projectId);
+    }
+    setDeleteConfirmation({ isOpen: false, projectId: null });
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmation({ isOpen: false, projectId: null });
   };
 
   const handleSaveSettings = () => {
@@ -99,6 +116,16 @@ const Settings = () => {
                   onClick={() => handleActivateProject(project.id)}
                 >
                   {project.is_active ? 'Deactivate' : 'Activate'}
+                </button>
+                
+                <button
+                  className="btn btn-outline py-1 px-2 text-xs text-red-600 hover:bg-red-50"
+                  onClick={() => handleDeleteClick(project.id)}
+                  title="Delete Project"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -185,6 +212,52 @@ const Settings = () => {
           onClose={() => setIsCreateModalOpen(false)}
           onCreate={handleCreateProject}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmation.isOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <motion.div 
+            className="bg-white rounded-xl shadow-lg w-full max-w-md"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', damping: 25 }}
+          >
+            <div className="p-6 border-b border-neutral-200">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-semibold text-neutral-800">Delete Project</h3>
+                <button 
+                  className="text-neutral-400 hover:text-neutral-500"
+                  onClick={handleCancelDelete}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-neutral-700">Are you sure you want to delete this project? This action cannot be undone.</p>
+            </div>
+            
+            <div className="p-6 border-t border-neutral-200 flex justify-end space-x-3">
+              <button
+                className="btn btn-outline"
+                onClick={handleCancelDelete}
+              >
+                Cancel
+              </button>
+              
+              <button
+                className="btn bg-red-600 hover:bg-red-700 text-white"
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   );
@@ -415,4 +488,4 @@ const CreateProjectModal = ({ onClose, onCreate }) => {
   );
 };
 
-export default Settings; 
+export default Settings;

@@ -68,6 +68,16 @@ const setProjectActive = async (id) => {
   return data[0];
 };
 
+const deleteProject = async (id) => {
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+  return true;
+};
+
 // API Keys
 const getApiKeys = async () => {
   const { data, error } = await supabase
@@ -186,6 +196,7 @@ export {
   createProject,
   updateProject,
   setProjectActive,
+  deleteProject,
   
   // API Keys
   getApiKeys,

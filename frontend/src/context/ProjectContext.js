@@ -5,6 +5,7 @@ import {
   setProjectActive, 
   createProject as createProjectApi,
   updateProject as updateProjectApi,
+  deleteProject as deleteProjectApi,
   getApiKeys,
   updateApiKeys
 } from '../utils/supabaseService';
@@ -139,6 +140,28 @@ export const ProjectProvider = ({ children }) => {
     }
   };
 
+  // Delete a project
+  const deleteProject = async (id) => {
+    try {
+      await deleteProjectApi(id);
+      
+      // If the deleted project was active, set activeProject to null
+      if (activeProject && activeProject.id === id) {
+        setActiveProject(null);
+      }
+      
+      // Remove the project from state
+      setProjects(prevProjects => 
+        prevProjects.filter(project => project.id !== id)
+      );
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      return false;
+    }
+  };
+
   return (
     <ProjectContext.Provider 
       value={{ 
@@ -151,7 +174,8 @@ export const ProjectProvider = ({ children }) => {
         updateApiKey,
         updateGmailApiKey,
         addProject,
-        updateProject
+        updateProject,
+        deleteProject
       }}
     >
       {children}
