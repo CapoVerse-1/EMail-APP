@@ -20,7 +20,7 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove }) => {
   
   return (
     <motion.div 
-      className={`card shadow-sm overflow-hidden m-1 ${isEditing ? 'border-2 border-primary-300' : 'border border-neutral-200'}`}
+      className={`card shadow-sm overflow-hidden border border-neutral-200 ${isEditing ? 'border-2 border-primary-300' : ''}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
