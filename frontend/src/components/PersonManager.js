@@ -27,8 +27,8 @@ const PersonManager = () => {
           {/* Placeholder Person Circles - Now using the icon */}
           {placeholderCircles.map((_, index) => (
             <div key={index} className="flex flex-col items-center">
-              {/* Remove padding from the wrapper div */}
-              <div className="h-20 w-20 rounded-full overflow-hidden"> 
+              {/* Add the same base styling as the create icon wrapper */}
+              <div className="h-20 w-20 rounded-full overflow-hidden bg-neutral-50 flex items-center justify-center"> 
                 <img 
                   src={personPlaceholderIcon} 
                   alt={`Person ${index + 1}`}
