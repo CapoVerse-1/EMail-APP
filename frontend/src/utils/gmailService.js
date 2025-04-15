@@ -27,12 +27,23 @@ const sendEmail = async (apiKey = null, to, subject, content) => {
       })
     });
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to send email');
+    // Get the response as text first
+    const responseText = await response.text();
+    
+    // Try to parse as JSON
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse response as JSON:', responseText);
+      throw new Error('Invalid response from server');
     }
     
-    const data = await response.json();
+    // Check for error in the response
+    if (!response.ok && !data.success) {
+      throw new Error(data.error || 'Failed to send email');
+    }
+    
     console.log('Email sent successfully:', data);
     return data;
   } catch (error) {
@@ -55,7 +66,8 @@ const saveSentEmail = async (emailData) => {
     return sentEmail;
   } catch (error) {
     console.error('Error saving sent email:', error);
-    throw error;
+    // Don't throw error for this non-critical function
+    return null;
   }
 };
 

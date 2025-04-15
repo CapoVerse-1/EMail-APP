@@ -23,32 +23,35 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
       return;
     }
     
-    // Remove the API key check since we're using a service account
-    // if (!gmailApiKey) {
-    //   setErrorMessage('Please add your Gmail API key in the settings page first.');
-    //   return;
-    // }
-    
     setIsSending(true);
     setErrorMessage('');
     
     try {
       // Send email via Gmail API through backend
-      await sendEmail(null, company.email, subject, latestEmail.content);
+      const response = await sendEmail(null, company.email, subject, latestEmail.content);
       
-      // Save to sent emails history in Supabase
-      await saveSentEmail({
-        to: company.email,
-        subject: subject,
-        content: latestEmail.content,
-        company: company.name
-      });
-      
-      setIsSent(true);
+      if (response && response.success) {
+        // Save to sent emails history in Supabase
+        try {
+          await saveSentEmail({
+            to: company.email,
+            subject: subject,
+            content: latestEmail.content,
+            company: company.name
+          });
+        } catch (saveError) {
+          console.warn('Email sent but failed to save to history:', saveError);
+        }
+        
+        setIsSent(true);
+      } else {
+        throw new Error('Failed to send email: Unknown error');
+      }
       
     } catch (error) {
       console.error('Error sending email:', error);
       setErrorMessage(error.message || 'Failed to send email');
+      setIsSent(false);
     } finally {
       setIsSending(false);
     }

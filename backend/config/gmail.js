@@ -2,8 +2,8 @@ const { google } = require('googleapis');
 const path = require('path');
 const fs = require('fs');
 
-// Service account file path
-const CREDENTIALS_PATH = path.join(__dirname, '../credentials/autoemail-456821-cd3dd049ae75.json');
+// Service account file path - use normalized path for Windows
+const CREDENTIALS_PATH = path.normalize(path.join(__dirname, '../credentials/autoemail-456821-cd3dd049ae75.json'));
 
 // Get Google Auth client - first try service account, then fallback to simulation
 const getAuth = async () => {
@@ -14,15 +14,25 @@ const getAuth = async () => {
     if (fs.existsSync(CREDENTIALS_PATH)) {
       console.log('Service account credentials found');
       
-      // Create auth client with the service account
-      const auth = new google.auth.GoogleAuth({
-        keyFile: CREDENTIALS_PATH,
-        scopes: ['https://www.googleapis.com/auth/gmail.send']
-      });
-      
-      return auth;
+      try {
+        // Create auth client with the service account
+        const auth = new google.auth.GoogleAuth({
+          keyFile: CREDENTIALS_PATH,
+          scopes: ['https://www.googleapis.com/auth/gmail.send']
+        });
+        
+        return auth;
+      } catch (error) {
+        console.error('Error creating auth with credentials file:', error);
+        return null;
+      }
     } else {
       console.warn('Service account file not found at:', CREDENTIALS_PATH);
+      console.warn('Working directory:', process.cwd());
+      console.warn('Available files in credentials directory:', 
+        fs.existsSync(path.dirname(CREDENTIALS_PATH)) 
+          ? fs.readdirSync(path.dirname(CREDENTIALS_PATH)) 
+          : 'Directory not found');
       return null;
     }
   } catch (error) {
@@ -38,12 +48,17 @@ const getGmailClient = async () => {
     const auth = await getAuth();
     
     if (auth) {
-      // Get credentials
-      const authClient = await auth.getClient();
-      console.log('Successfully created Gmail API client with service account');
-      
-      // Create real Gmail client
-      return google.gmail({ version: 'v1', auth: authClient });
+      try {
+        // Get credentials
+        const authClient = await auth.getClient();
+        console.log('Successfully created Gmail API client with service account');
+        
+        // Create real Gmail client
+        return google.gmail({ version: 'v1', auth: authClient });
+      } catch (error) {
+        console.error('Error getting auth client:', error);
+        return getMockGmailClient();
+      }
     }
   } catch (error) {
     console.error('Failed to create real Gmail client:', error);
@@ -56,6 +71,7 @@ const getGmailClient = async () => {
 
 // Mock Gmail client for testing/fallback
 const getMockGmailClient = () => {
+  console.log('Creating mock Gmail client for simulation');
   return {
     users: {
       messages: {
@@ -84,6 +100,7 @@ const getMockGmailClient = () => {
             console.log(`Simulated email send to: ${to}`);
             console.log(`Subject: ${subject}`);
             
+            // Simulate successful response
             return { 
               data: { 
                 id: `simulated_${Date.now()}`,
