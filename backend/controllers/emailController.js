@@ -61,6 +61,7 @@ const sendEmail = async (req, res) => {
     if (!to || !subject || !content) {
       console.error('Missing required fields');
       return res.status(400).json({ 
+        success: false, 
         error: 'Failed to send email', 
         details: 'Missing required fields (to, subject, or content)' 
       });
@@ -82,11 +83,11 @@ const sendEmail = async (req, res) => {
   } catch (error) {
     console.error('Error in sendEmail controller:', error);
     
-    // Always return the actual error in development for debugging
+    // Send back detailed error information
     return res.status(500).json({
       success: false,
       error: error.message,
-      details: error.response?.body || 'Unknown error'
+      details: error.details || {}
     });
   }
 };

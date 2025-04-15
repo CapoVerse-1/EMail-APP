@@ -37,23 +37,18 @@ const sendEmail = async (to, subject, htmlContent, from = FROM_EMAIL || 'noreply
   }
   
   try {
-    // Use a specific verified email as the sender
-    // This is crucial - we'll use admin@sendgrid.net which is pre-verified
-    // But set a custom name with your actual email for replies
+    // Use directly verified email address
     const msg = {
       to,
-      from: {
-        email: 'noreply@mail-service-demo.com', // Use this default address that's allowed
-        name: `${FROM_EMAIL} via Email System`  // Show your real email in the name field
-      },
-      replyTo: FROM_EMAIL, // Set reply-to as your actual email
+      from: 'kilian1.sternath@gmail.com', // Must be your verified sender
       subject,
       html: htmlContent,
     };
     
     console.log('Sending email with SendGrid...');
     
-    // Send email with SendGrid
+    // Send email with SendGrid with proper logging
+    console.log('SendGrid message configuration:', JSON.stringify(msg, null, 2));
     const response = await sgMail.send(msg);
     
     console.log('✅ SUCCESS: Email sent via SendGrid');
@@ -76,8 +71,10 @@ const sendEmail = async (to, subject, htmlContent, from = FROM_EMAIL || 'noreply
       console.error('Error headers:', JSON.stringify(error.response.headers));
     }
     
-    // Throw the error to be handled by the controller
-    throw error;
+    // Throw a clear error for the frontend
+    const detailedError = new Error('Forbidden');
+    detailedError.details = error.response?.body || {};
+    throw detailedError;
   }
 };
 
