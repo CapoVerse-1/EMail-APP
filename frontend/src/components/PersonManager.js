@@ -1,6 +1,6 @@
 import React from 'react';
 import createPersonIcon from '../assets/create-person-icon.png'; // Import the image
-import personPlaceholderIcon from '../assets/person-placeholder-icon.png'; // Import the placeholder icon
+import personProfileIcon from '../assets/person-profile-icon.png'; // Import the NEW profile icon
 
 const PersonManager = () => {
 
@@ -30,7 +30,7 @@ const PersonManager = () => {
               {/* Add the same base styling as the create icon wrapper */}
               <div className="h-20 w-20 rounded-full overflow-hidden bg-neutral-50 flex items-center justify-center"> 
                 <img 
-                  src={personPlaceholderIcon} 
+                  src={personProfileIcon} /* Use the new profile icon */
                   alt={`Person ${index + 1}`}
                   className="h-full w-full object-cover"
                 />
