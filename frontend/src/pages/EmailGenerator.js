@@ -259,13 +259,13 @@ const EmailGenerator = () => {
         <p className="text-neutral-500">Import company data and generate personalized emails</p>
       </div>
       
-      {/* Project Management Section - Add left padding */}
-      <div className="mb-6 max-w-4xl pl-16">
+      {/* Project Management Section - Adjust width */}
+      <div className="mb-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ProjectManager />
       </div>
       
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-4 mb-6">
+      {/* Action Buttons - Consider centering or adjusting these too? */}
+      <div className="flex flex-wrap gap-4 mb-6 px-4 sm:px-6 lg:px-8">
         <button 
           className="btn btn-primary flex items-center space-x-2"
           onClick={() => setIsImportModalOpen(true)}
