@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import ImportExcelModal from '../components/ImportExcelModal';
 import CompanyCard from '../components/CompanyCard';
 import ProjectManager from '../components/ProjectManager';
+import PersonManager from '../components/PersonManager';
 import { useProjectContext } from '../context/ProjectContext';
 import { generateEmail, availableModels, availableEmailTypes } from '../utils/openaiService';
 import { 
@@ -260,8 +261,13 @@ const EmailGenerator = () => {
       </div>
       
       {/* Project Management Section - Adjust width */}
-      <div className="mb-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ProjectManager />
+      </div>
+      
+      {/* NEW: Persons Section */}
+      <div className="mb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PersonManager />
       </div>
       
       {/* Action Buttons - Consider centering or adjusting these too? */}
