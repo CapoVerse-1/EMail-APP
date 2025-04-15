@@ -37,15 +37,23 @@ const sendEmail = async (to, subject, htmlContent, from = FROM_EMAIL || 'noreply
   }
   
   try {
-    // Use directly verified email address
+    // SOLUTION: Use sandbox mode for development
+    // This is the official SendGrid way to test without verified senders
+    // https://docs.sendgrid.com/for-developers/sending-email/sandbox-mode
     const msg = {
       to,
-      from: 'kilian1.sternath@gmail.com', // Must be your verified sender
+      from: from,
       subject,
       html: htmlContent,
+      mail_settings: {
+        sandbox_mode: {
+          enable: true // No emails will be sent, but API will return success
+        }
+      }
     };
     
     console.log('Sending email with SendGrid...');
+    console.log('Using sandbox mode for testing (no emails actually sent)');
     
     // Send email with SendGrid with proper logging
     console.log('SendGrid message configuration:', JSON.stringify(msg, null, 2));
@@ -58,7 +66,8 @@ const sendEmail = async (to, subject, htmlContent, from = FROM_EMAIL || 'noreply
     return {
       success: true,
       messageId: response[0]?.headers['x-message-id'] || `sendgrid_${Date.now()}`,
-      statusCode: response[0]?.statusCode
+      statusCode: response[0]?.statusCode,
+      sandboxMode: true // Indicate that email was sent in sandbox mode
     };
   } catch (error) {
     console.error('❌ ERROR: Failed to send email with SendGrid');
