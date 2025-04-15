@@ -27,8 +27,8 @@ const PersonManager = () => {
           {/* Placeholder Person Circles - Now using the icon */}
           {placeholderCircles.map((_, index) => (
             <div key={index} className="flex flex-col items-center">
-              {/* Increase size for placeholder icons */}
-              <div className="h-24 w-24 rounded-full overflow-hidden bg-neutral-50 flex items-center justify-center">
+              {/* Make placeholder icons slightly larger */}
+              <div className="h-28 w-28 rounded-full overflow-hidden bg-neutral-50 flex items-center justify-center">
                 <img 
                   src={personProfileIcon} /* Use the new profile icon */
                   alt={`Person ${index + 1}`}
