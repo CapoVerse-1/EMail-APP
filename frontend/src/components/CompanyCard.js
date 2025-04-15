@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useProjectContext } from '../context/ProjectContext';
 import { sendEmail, saveSentEmail } from '../utils/gmailService';
+import { updateGeneratedEmail } from '../utils/supabaseService';
 
 const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'introduction', model = 'gpt-3.5-turbo' }) => {
   const { gmailApiKey } = useProjectContext();
@@ -23,11 +24,18 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
   // Save content changes
   const saveContentChanges = () => {
     if (latestEmail && editableContent !== latestEmail.content) {
-      // Update the content in the latest email
-      onUpdate('generated_emails', [
-        { ...latestEmail, content: editableContent },
-        ...(company.generated_emails?.filter(email => email.id !== latestEmail.id) || [])
-      ]);
+      // Update the content in the latest email using updateGeneratedEmail
+      updateGeneratedEmail(latestEmail.id, { content: editableContent })
+        .then(updatedEmail => {
+          // Update local state with the updated email
+          onUpdate('generated_emails', [
+            { ...latestEmail, content: editableContent },
+            ...(company.generated_emails?.filter(email => email.id !== latestEmail.id) || [])
+          ]);
+        })
+        .catch(error => {
+          console.error('Error updating email content:', error);
+        });
     }
     setIsContentEditing(false);
   };
@@ -116,10 +124,18 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
                   if (isContentEditing) {
                     // Save changes when clicking the check mark
                     if (latestEmail && editableContent !== latestEmail.content) {
-                      onUpdate('generated_emails', [
-                        { ...latestEmail, content: editableContent },
-                        ...(company.generated_emails?.filter(email => email.id !== latestEmail.id) || [])
-                      ]);
+                      // Update the email directly using updateGeneratedEmail
+                      updateGeneratedEmail(latestEmail.id, { content: editableContent })
+                        .then(updatedEmail => {
+                          // Update local state with the updated email
+                          onUpdate('generated_emails', [
+                            { ...latestEmail, content: editableContent },
+                            ...(company.generated_emails?.filter(email => email.id !== latestEmail.id) || [])
+                          ]);
+                        })
+                        .catch(error => {
+                          console.error('Error updating email content:', error);
+                        });
                     }
                     setIsContentEditing(false);
                   } else {
