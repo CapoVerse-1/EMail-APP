@@ -113,8 +113,19 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
               <button 
                 className="p-1 text-neutral-400 hover:text-neutral-600 rounded-full transition-colors"
                 onClick={() => {
-                  setIsContentEditing(!isContentEditing);
-                  setEditableContent(latestEmail.content);
+                  if (isContentEditing) {
+                    // Save changes when clicking the check mark
+                    if (latestEmail && editableContent !== latestEmail.content) {
+                      onUpdate('generated_emails', [
+                        { ...latestEmail, content: editableContent },
+                        ...(company.generated_emails?.filter(email => email.id !== latestEmail.id) || [])
+                      ]);
+                    }
+                    setIsContentEditing(false);
+                  } else {
+                    setIsContentEditing(true);
+                    setEditableContent(latestEmail.content);
+                  }
                 }}
                 title={isContentEditing ? "Save changes" : "Edit email content"}
               >
