@@ -9,6 +9,8 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
   const [isSending, setIsSending] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isContentEditing, setIsContentEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
   
   // Get the most recent generated email
   const latestEmail = company.generated_emails && company.generated_emails.length > 0
@@ -16,6 +18,42 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
     : null;
     
   const [subject, setSubject] = useState(latestEmail?.subject || `${emailType.charAt(0).toUpperCase() + emailType.slice(1)} from Your Company`);
+  
+  // Start editing content
+  const startContentEditing = () => {
+    if (latestEmail) {
+      setEditedContent(latestEmail.content);
+      setIsContentEditing(true);
+    }
+  };
+  
+  // Save edited content
+  const saveContentEditing = () => {
+    if (latestEmail && editedContent) {
+      // Create a copy of the latest email with the edited content
+      const updatedEmail = {
+        ...latestEmail,
+        content: editedContent
+      };
+      
+      // Update the email in the company's generated_emails array
+      const updatedEmails = company.generated_emails.map(email => 
+        email.id === latestEmail.id ? updatedEmail : email
+      );
+      
+      // Update the company object with the new emails array
+      onUpdate('generated_emails', updatedEmails);
+      
+      // Exit edit mode
+      setIsContentEditing(false);
+    }
+  };
+  
+  // Cancel content editing
+  const cancelContentEditing = () => {
+    setIsContentEditing(false);
+    setEditedContent('');
+  };
   
   const handleSend = async () => {
     if (!latestEmail || !company.email) {
@@ -27,16 +65,24 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
     setErrorMessage('');
     
     try {
+      // Get the content - use edited content if in edit mode
+      const emailContent = isContentEditing ? editedContent : latestEmail.content;
+      
       // Send email via Gmail API through backend
-      const response = await sendEmail(null, company.email, subject, latestEmail.content);
+      const response = await sendEmail(null, company.email, subject, emailContent);
       
       if (response && response.success) {
+        // If in edit mode, save the changes first
+        if (isContentEditing) {
+          await saveContentEditing();
+        }
+        
         // Save to sent emails history in Supabase
         try {
           await saveSentEmail({
             to: company.email,
             subject: subject,
-            content: latestEmail.content,
+            content: emailContent,
             company: company.name
           });
         } catch (saveError) {
@@ -178,7 +224,7 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
                   <button 
                     className="text-xs flex items-center text-neutral-500 hover:text-neutral-700"
                     onClick={onRegenerate}
-                    disabled={company.isRegenerating}
+                    disabled={company.isRegenerating || isContentEditing}
                   >
                     {company.isRegenerating ? (
                       <svg className="animate-spin h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -192,6 +238,18 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
                     )}
                     Regenerate
                   </button>
+                  
+                  {!isContentEditing && latestEmail && (
+                    <button 
+                      className="text-xs flex items-center text-neutral-500 hover:text-neutral-700"
+                      onClick={startContentEditing}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -218,13 +276,39 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
                 </div>
               )}
               
-              <div className="bg-white border border-neutral-200 rounded-lg p-2 mb-2">
-                <textarea
-                  className="w-full min-h-[120px] outline-none text-xs text-neutral-700 resize-none overflow-auto"
-                  value={latestEmail.content}
-                  readOnly={true}
-                />
+              <div className={`bg-white rounded-lg p-2 mb-2 ${isContentEditing ? 'border border-primary-400' : 'border border-neutral-200'}`}>
+                {isContentEditing ? (
+                  <textarea
+                    className="w-full min-h-[120px] outline-none text-xs text-neutral-700 resize-none overflow-auto"
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    autoFocus
+                  />
+                ) : (
+                  <textarea
+                    className="w-full min-h-[120px] outline-none text-xs text-neutral-700 resize-none overflow-auto"
+                    value={latestEmail.content}
+                    readOnly={true}
+                  />
+                )}
               </div>
+              
+              {isContentEditing && (
+                <div className="flex justify-end space-x-2 mb-2">
+                  <button 
+                    className="text-xs text-neutral-600 hover:text-neutral-800 px-2 py-1"
+                    onClick={cancelContentEditing}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="text-xs bg-primary-600 text-white px-2 py-1 rounded"
+                    onClick={saveContentEditing}
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              )}
               
               {errorMessage && (
                 <div className="text-red-500 text-xs mb-2">
