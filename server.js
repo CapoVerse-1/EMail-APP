@@ -1,12 +1,12 @@
+// Load environment variables first
+require('dotenv').config();
+console.log('Environment loaded. FROM_EMAIL:', process.env.FROM_EMAIL);
+
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 
 // Import routes
 const emailRoutes = require('./backend/routes/emailRoutes');
-
-// Load environment variables
-dotenv.config();
 
 // Initialize Express app
 const app = express();

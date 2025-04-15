@@ -66,60 +66,27 @@ const sendEmail = async (req, res) => {
       });
     }
 
-    try {
-      // Send email using SendGrid
-      const result = await sendGridEmail(
-        to, 
-        subject, 
-        content, 
-        from || process.env.FROM_EMAIL
-      );
+    // Send email using SendGrid - don't wrap in try/catch to allow errors to propagate
+    console.log('Calling SendGrid service...');
+    const result = await sendGridEmail(
+      to, 
+      subject, 
+      content, 
+      from || process.env.FROM_EMAIL
+    );
 
-      console.log('Email sent successfully with ID:', result.messageId);
-      
-      // Return success
-      return res.status(200).json({ 
-        success: true, 
-        messageId: result.messageId,
-        to: to,
-        subject: subject,
-        simulated: result.simulated || false
-      });
-    } catch (error) {
-      console.error('Error in SendGrid operation:', error);
-      
-      // For development only - always return success
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('SIMULATING SUCCESS: Email sending in development mode');
-        return res.status(200).json({ 
-          success: true, 
-          messageId: `simulated_${Date.now()}`,
-          to: to,
-          subject: subject,
-          simulated: true
-        });
-      }
-      
-      return res.status(500).json({
-        error: 'Failed to send email',
-        details: error.message
-      });
-    }
+    console.log('Email send result:', result);
+    
+    // Return result directly
+    return res.status(200).json(result);
   } catch (error) {
-    console.error('Outer error in sendEmail controller:', error);
+    console.error('Error in sendEmail controller:', error);
     
-    // Return proper error in production, simulate success in development
-    if (process.env.NODE_ENV !== 'production') {
-      return res.status(200).json({ 
-        success: true,
-        messageId: `fallback_${Date.now()}`,
-        simulated: true
-      });
-    }
-    
+    // Always return the actual error in development for debugging
     return res.status(500).json({
-      error: 'Server error processing email request',
-      details: error.message
+      success: false,
+      error: error.message,
+      details: error.response?.body || 'Unknown error'
     });
   }
 };
