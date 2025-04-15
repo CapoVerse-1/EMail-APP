@@ -23,6 +23,10 @@ export const ProjectProvider = ({ children }) => {
   const [gmailApiKey, setGmailApiKey] = useState('');
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Add state for generation settings
+  const [selectedModel, setSelectedModel] = useState('gpt-3.5-turbo'); 
+  const [selectedEmailType, setSelectedEmailType] = useState('introduction');
 
   // Initialize projects on mount
   useEffect(() => {
@@ -170,6 +174,10 @@ export const ProjectProvider = ({ children }) => {
         apiKey,
         gmailApiKey,
         isLoading,
+        selectedModel,
+        setSelectedModel,
+        selectedEmailType,
+        setSelectedEmailType,
         toggleProjectActive,
         updateApiKey,
         updateGmailApiKey,

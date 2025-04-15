@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import ImportExcelModal from '../components/ImportExcelModal';
 import CompanyCard from '../components/CompanyCard';
+import ProjectManager from '../components/ProjectManager';
 import { useProjectContext } from '../context/ProjectContext';
 import { generateEmail, availableModels, availableEmailTypes } from '../utils/openaiService';
 import { 
@@ -13,13 +14,16 @@ import {
 } from '../utils/supabaseService';
 
 const EmailGenerator = () => {
-  const { activeProject, apiKey } = useProjectContext();
+  const { 
+    activeProject, 
+    apiKey, 
+    selectedModel, 
+    selectedEmailType 
+  } = useProjectContext();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedModel, setSelectedModel] = useState('gpt-3.5-turbo');
-  const [selectedEmailType, setSelectedEmailType] = useState('introduction');
   
   // Load companies when activeProject changes
   useEffect(() => {
@@ -255,49 +259,9 @@ const EmailGenerator = () => {
         <p className="text-neutral-500">Import company data and generate personalized emails</p>
       </div>
       
-      {/* Settings Section */}
-      <div className="mb-6 p-3 bg-neutral-50 rounded-lg border border-neutral-200 max-w-md">
-        <h2 className="text-md font-semibold text-neutral-700 mb-3">Generation Settings</h2>
-        
-        <div className="space-y-3">
-          {/* Email Type Selection */}
-          <div>
-            <label htmlFor="emailType" className="block text-xs font-medium text-neutral-600 mb-1">
-              Email Type
-            </label>
-            <select
-              id="emailType"
-              className="w-full p-1.5 text-sm border border-neutral-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-              value={selectedEmailType}
-              onChange={(e) => setSelectedEmailType(e.target.value)}
-            >
-              {availableEmailTypes.map(type => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          {/* Model Selection */}
-          <div>
-            <label htmlFor="model" className="block text-xs font-medium text-neutral-600 mb-1">
-              AI Model
-            </label>
-            <select
-              id="model"
-              className="w-full p-1.5 text-sm border border-neutral-300 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-            >
-              {availableModels.map(model => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+      {/* Project Management Section - Replaces Generation Settings */}
+      <div className="mb-6 max-w-4xl">
+        <ProjectManager />
       </div>
       
       {/* Action Buttons */}
