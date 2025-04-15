@@ -259,8 +259,8 @@ const EmailGenerator = () => {
         <p className="text-neutral-500">Import company data and generate personalized emails</p>
       </div>
       
-      {/* Project Management Section - Replaces Generation Settings */}
-      <div className="mb-6 max-w-4xl">
+      {/* Project Management Section - Add left padding */}
+      <div className="mb-6 max-w-4xl pl-16">
         <ProjectManager />
       </div>
       
