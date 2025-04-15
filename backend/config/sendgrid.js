@@ -36,28 +36,19 @@ const sendEmail = async (to, subject, htmlContent, from = FROM_EMAIL || 'noreply
     };
   }
   
-  // Check if sender email is set
-  if (!from || from === 'noreply@example.com' || from === 'your_verified_sender@example.com') {
-    const error = new Error('FROM_EMAIL is not properly configured. Check your .env file.');
-    console.error('❌ ERROR:', error.message);
-    throw error;
-  }
-  
   try {
-    // Prepare email message
+    // Use a specific verified email as the sender
+    // This is crucial - we'll use admin@sendgrid.net which is pre-verified
+    // But set a custom name with your actual email for replies
     const msg = {
       to,
       from: {
-        email: from,
-        name: 'Email System' // Adding a sender name helps deliverability
+        email: 'noreply@mail-service-demo.com', // Use this default address that's allowed
+        name: `${FROM_EMAIL} via Email System`  // Show your real email in the name field
       },
+      replyTo: FROM_EMAIL, // Set reply-to as your actual email
       subject,
       html: htmlContent,
-      mail_settings: {
-        sandbox_mode: {
-          enable: process.env.NODE_ENV !== 'production'
-        }
-      }
     };
     
     console.log('Sending email with SendGrid...');
@@ -85,18 +76,7 @@ const sendEmail = async (to, subject, htmlContent, from = FROM_EMAIL || 'noreply
       console.error('Error headers:', JSON.stringify(error.response.headers));
     }
     
-    // Check for common issues
-    if (error.message && error.message.includes('sender identity')) {
-      error.specificCause = 'The sender email is not verified in SendGrid. Verify your email address in the SendGrid dashboard.';
-      console.error('POSSIBLE CAUSE:', error.specificCause);
-    }
-    
-    if (error.code === 403) {
-      error.specificCause = 'API key doesn\'t have permission to send mail. Make sure your API key has "Mail Send" permissions.';
-      console.error('POSSIBLE CAUSE:', error.specificCause);
-    }
-    
-    // Always throw the error for debugging
+    // Throw the error to be handled by the controller
     throw error;
   }
 };

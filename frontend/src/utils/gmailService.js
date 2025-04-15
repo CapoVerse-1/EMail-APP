@@ -40,8 +40,10 @@ const sendEmail = async (apiKey = null, to, subject, content) => {
     }
     
     // Check for error in the response
-    if (!response.ok && !data.success) {
-      throw new Error(data.error || 'Failed to send email');
+    if (!response.ok || !data.success) {
+      const errorMessage = data.error || data.details || 'Failed to send email';
+      console.error('Server returned error:', data);
+      throw new Error(errorMessage);
     }
     
     console.log('Email sent successfully:', data);
