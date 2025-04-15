@@ -67,7 +67,7 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
   
   return (
     <motion.div 
-      className={`overflow-hidden rounded-xl border border-neutral-200 shadow-sm ${isEditing ? 'ring-2 ring-primary-300' : ''}`}
+      className={`overflow-hidden rounded-xl border border-neutral-200 shadow-sm ${isEditing ? '' : ''}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -80,7 +80,7 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
             {isEditing ? (
               <input
                 type="text"
-                className="input text-base"
+                className="input text-base border-neutral-200 w-full"
                 placeholder="Company Name"
                 value={company.name}
                 onChange={(e) => onUpdate('name', e.target.value)}
@@ -121,7 +121,7 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
               <label className="block text-xs font-medium text-neutral-600 mb-1">Email</label>
               <input
                 type="email"
-                className="input"
+                className="input border-neutral-200 focus:ring-1"
                 placeholder="contact@company.com"
                 value={company.email}
                 onChange={(e) => onUpdate('email', e.target.value)}
@@ -131,7 +131,7 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
             <div>
               <label className="block text-xs font-medium text-neutral-600 mb-1">Description</label>
               <textarea
-                className="input min-h-[60px]"
+                className="input min-h-[80px] border-neutral-200 focus:ring-1"
                 placeholder="Describe what the company does"
                 value={company.description}
                 onChange={(e) => onUpdate('description', e.target.value)}
