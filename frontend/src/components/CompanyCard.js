@@ -27,11 +27,13 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
       // Update the content in the latest email using updateGeneratedEmail
       updateGeneratedEmail(latestEmail.id, { content: editableContent })
         .then(updatedEmail => {
-          // Update local state with the updated email
-          onUpdate('generated_emails', [
-            { ...latestEmail, content: editableContent },
-            ...(company.generated_emails?.filter(email => email.id !== latestEmail.id) || [])
-          ]);
+          // Just update the local state - don't call onUpdate with 'generated_emails'
+          const updatedEmails = company.generated_emails.map(email => 
+            email.id === latestEmail.id ? { ...email, content: editableContent } : email
+          );
+          
+          // Update the company's emails in local state only
+          onUpdate('_localEmailsUpdate', updatedEmails);
         })
         .catch(error => {
           console.error('Error updating email content:', error);
@@ -127,11 +129,14 @@ const CompanyCard = ({ company, onUpdate, onRegenerate, onRemove, emailType = 'i
                       // Update the email directly using updateGeneratedEmail
                       updateGeneratedEmail(latestEmail.id, { content: editableContent })
                         .then(updatedEmail => {
-                          // Update local state with the updated email
-                          onUpdate('generated_emails', [
-                            { ...latestEmail, content: editableContent },
-                            ...(company.generated_emails?.filter(email => email.id !== latestEmail.id) || [])
-                          ]);
+                          // Just update the local state - don't call onUpdate with 'generated_emails'
+                          // as that tries to update the company record
+                          const updatedEmails = company.generated_emails.map(email => 
+                            email.id === latestEmail.id ? { ...email, content: editableContent } : email
+                          );
+                          
+                          // Update the company's emails in local state only
+                          onUpdate('_localEmailsUpdate', updatedEmails);
                         })
                         .catch(error => {
                           console.error('Error updating email content:', error);

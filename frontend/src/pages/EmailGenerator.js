@@ -168,6 +168,15 @@ const EmailGenerator = () => {
 
   const handleUpdateCompany = async (id, field, value) => {
     try {
+      // Special case for updating emails locally only, don't send to backend
+      if (field === '_localEmailsUpdate') {
+        setCompanies(companies.map(company => 
+          company.id === id ? { ...company, generated_emails: value } : company
+        ));
+        return;
+      }
+
+      // Normal case: update the company record
       await updateCompany(id, { [field]: value });
       setCompanies(companies.map(company => 
         company.id === id ? { ...company, [field]: value } : company
