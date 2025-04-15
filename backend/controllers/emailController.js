@@ -1,5 +1,5 @@
 const openai = require('../config/openai');
-const { getGmailClient } = require('../config/gmail');
+const { sendEmail: sendGridEmail } = require('../config/sendgrid');
 const supabase = require('../config/supabase');
 
 // Generate email content using OpenAI
@@ -49,12 +49,12 @@ const generateEmail = async (req, res) => {
   }
 };
 
-// Send email using Gmail API
+// Send email using SendGrid
 const sendEmail = async (req, res) => {
   try {
     console.log('=== EMAIL SEND REQUEST RECEIVED ===');
     
-    const { to, subject, content, from = 'me@example.com' } = req.body;
+    const { to, subject, content, from } = req.body;
     console.log(`Request body: to=${to}, subject=${subject?.substring(0, 30)}...`);
     
     // Validate request
@@ -67,68 +67,59 @@ const sendEmail = async (req, res) => {
     }
 
     try {
-      // Get Gmail client
-      const gmail = await getGmailClient();
-      console.log('Gmail client created successfully');
+      // Send email using SendGrid
+      const result = await sendGridEmail(
+        to, 
+        subject, 
+        content, 
+        from || process.env.FROM_EMAIL
+      );
 
-      // Create the email in base64 format
-      const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
-      const messageParts = [
-        `From: ${from}`,
-        `To: ${to}`,
-        `Subject: ${utf8Subject}`,
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=utf-8',
-        '',
-        content,
-      ];
-      const message = messageParts.join('\n');
-      const encodedMessage = Buffer.from(message)
-        .toString('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-
-      console.log('Sending email...');
-      
-      // Send the email
-      const result = await gmail.users.messages.send({
-        userId: 'me',
-        requestBody: {
-          raw: encodedMessage,
-        },
-      });
-
-      console.log('Email sent successfully with ID:', result.data.id);
+      console.log('Email sent successfully with ID:', result.messageId);
       
       // Return success
       return res.status(200).json({ 
         success: true, 
-        messageId: result.data.id,
-        to: to,
-        subject: subject
-      });
-    } catch (innerError) {
-      console.error('Error in Gmail API operation:', innerError);
-      
-      // For development only - always return success
-      console.log('SIMULATING SUCCESS: Email sending in mock/development mode');
-      return res.status(200).json({ 
-        success: true, 
-        messageId: `simulated_${Date.now()}`,
+        messageId: result.messageId,
         to: to,
         subject: subject,
-        simulated: true
+        simulated: result.simulated || false
+      });
+    } catch (error) {
+      console.error('Error in SendGrid operation:', error);
+      
+      // For development only - always return success
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('SIMULATING SUCCESS: Email sending in development mode');
+        return res.status(200).json({ 
+          success: true, 
+          messageId: `simulated_${Date.now()}`,
+          to: to,
+          subject: subject,
+          simulated: true
+        });
+      }
+      
+      return res.status(500).json({
+        error: 'Failed to send email',
+        details: error.message
       });
     }
   } catch (error) {
     console.error('Outer error in sendEmail controller:', error);
     
-    // Always return success for this specific issue
-    return res.status(200).json({ 
-      success: true,
-      messageId: `fallback_${Date.now()}`,
-      simulated: true
+    // Return proper error in production, simulate success in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(200).json({ 
+        success: true,
+        messageId: `fallback_${Date.now()}`,
+        simulated: true
+      });
+    }
+    
+    return res.status(500).json({
+      error: 'Server error processing email request',
+      details: error.message
     });
   }
 };
