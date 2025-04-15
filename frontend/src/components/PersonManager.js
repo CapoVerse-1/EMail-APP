@@ -27,11 +27,14 @@ const PersonManager = () => {
           {/* Placeholder Person Circles - Now using the icon */}
           {placeholderCircles.map((_, index) => (
             <div key={index} className="flex flex-col items-center">
-              <img 
-                src={personPlaceholderIcon} 
-                alt={`Person ${index + 1}`}
-                className="h-20 w-20 rounded-full object-cover overflow-hidden bg-neutral-200"
-              />
+              {/* Add a wrapper div for size, shape, padding */}
+              <div className="h-20 w-20 rounded-full overflow-hidden p-1.5"> {/* Added padding */}
+                <img 
+                  src={personPlaceholderIcon} 
+                  alt={`Person ${index + 1}`}
+                  className="h-full w-full object-cover" /* Removed size/shape/bg, image fills wrapper */
+                />
+              </div>
               {/* <p className="mt-2 text-sm text-neutral-500">Person {index + 1}</p> */}
             </div>
           ))}
