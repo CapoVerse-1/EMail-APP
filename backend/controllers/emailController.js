@@ -52,7 +52,7 @@ const generateEmail = async (req, res) => {
 // Send email using SendGrid
 const sendEmail = async (req, res) => {
   try {
-    console.log('=== EMAIL SEND REQUEST RECEIVED ===');
+    console.log('\n=== EMAIL SEND REQUEST RECEIVED ===');
     
     const { to, subject, content, from } = req.body;
     console.log(`Request body: to=${to}, subject=${subject?.substring(0, 30)}...`);
@@ -67,27 +67,49 @@ const sendEmail = async (req, res) => {
       });
     }
 
-    // Send email using SendGrid - don't wrap in try/catch to allow errors to propagate
-    console.log('Calling SendGrid service...');
-    const result = await sendGridEmail(
-      to, 
-      subject, 
-      content, 
-      from || process.env.FROM_EMAIL
-    );
+    // Log the full request details
+    console.log('Full request body (truncated content):', {
+      ...req.body,
+      content: req.body.content?.substring(0, 100) + '...'
+    });
 
-    console.log('Email send result:', result);
+    // Send email using SendGrid
+    console.log('Calling SendGrid service...');
     
-    // Return result directly
-    return res.status(200).json(result);
+    try {
+      const result = await sendGridEmail(
+        to, 
+        subject, 
+        content, 
+        from || process.env.FROM_EMAIL
+      );
+  
+      console.log('Email send result:', result);
+      
+      // Return result directly
+      return res.status(200).json(result);
+    } catch (sendError) {
+      console.error('SendGrid service error:', sendError);
+      
+      // More detailed error for debugging
+      return res.status(500).json({
+        success: false,
+        error: sendError.message || 'Email sending failed',
+        details: sendError.details || {},
+        code: sendError.code
+      });
+    }
   } catch (error) {
-    console.error('Error in sendEmail controller:', error);
+    console.error('Unexpected error in sendEmail controller:', error);
     
     // Send back detailed error information
     return res.status(500).json({
       success: false,
-      error: error.message,
-      details: error.details || {}
+      error: 'Server error',
+      details: {
+        message: error.message,
+        stack: process.env.NODE_ENV === 'production' ? null : error.stack
+      }
     });
   }
 };

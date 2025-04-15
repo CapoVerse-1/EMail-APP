@@ -1,4 +1,4 @@
-const sgMail = require('@sendgrid/mail');
+const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -11,14 +11,7 @@ console.log('SendGrid Configuration:');
 console.log('- API Key exists:', !!SENDGRID_API_KEY);
 console.log('- FROM_EMAIL:', FROM_EMAIL || 'Not configured');
 
-if (SENDGRID_API_KEY) {
-  sgMail.setApiKey(SENDGRID_API_KEY);
-  console.log('SendGrid API configured successfully');
-} else {
-  console.warn('SendGrid API key not found. Email sending will be simulated.');
-}
-
-// Send email function using SendGrid
+// Send email function using direct API calls instead of SDK
 const sendEmail = async (to, subject, htmlContent, from = FROM_EMAIL || 'noreply@example.com') => {
   console.log(`\n==== EMAIL SEND REQUEST ====`);
   console.log(`From: ${from}`);
@@ -26,7 +19,7 @@ const sendEmail = async (to, subject, htmlContent, from = FROM_EMAIL || 'noreply
   console.log(`Subject: ${subject}`);
   console.log(`Content length: ${htmlContent.length} characters`);
   
-  // Check if sender is verified
+  // Simulate success if no API key
   if (!SENDGRID_API_KEY) {
     console.log('❌ NO API KEY: Email sending simulated');
     return {
@@ -37,47 +30,71 @@ const sendEmail = async (to, subject, htmlContent, from = FROM_EMAIL || 'noreply
   }
   
   try {
-    // SOLUTION: Use sandbox mode for development
-    // This is the official SendGrid way to test without verified senders
-    // https://docs.sendgrid.com/for-developers/sending-email/sandbox-mode
-    const msg = {
-      to,
-      from: from,
-      subject,
-      html: htmlContent,
+    console.log('Sending email directly via SendGrid API...');
+    
+    // Create the email request payload
+    const payload = {
+      personalizations: [{
+        to: [{ email: to }],
+        subject: subject,
+      }],
+      from: { email: from },
+      content: [{
+        type: 'text/html',
+        value: htmlContent
+      }],
       mail_settings: {
         sandbox_mode: {
-          enable: true // No emails will be sent, but API will return success
+          enable: true
         }
       }
     };
     
-    console.log('Sending email with SendGrid...');
-    console.log('Using sandbox mode for testing (no emails actually sent)');
+    console.log('Request payload:', JSON.stringify(payload, null, 2));
     
-    // Send email with SendGrid with proper logging
-    console.log('SendGrid message configuration:', JSON.stringify(msg, null, 2));
-    const response = await sgMail.send(msg);
+    // Send the API request directly
+    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SENDGRID_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
     
-    console.log('✅ SUCCESS: Email sent via SendGrid');
-    console.log('Status code:', response[0]?.statusCode);
-    console.log('Headers:', JSON.stringify(response[0]?.headers || {}));
-    
-    return {
-      success: true,
-      messageId: response[0]?.headers['x-message-id'] || `sendgrid_${Date.now()}`,
-      statusCode: response[0]?.statusCode,
-      sandboxMode: true // Indicate that email was sent in sandbox mode
-    };
+    // Check the response
+    if (response.ok) {
+      console.log('✅ SUCCESS: Email sent via SendGrid API');
+      console.log('Status:', response.status);
+      
+      // SendGrid returns an empty 202 response on success
+      return {
+        success: true,
+        messageId: `direct_${Date.now()}`,
+        statusCode: response.status,
+        sandboxMode: true
+      };
+    } else {
+      // Handle error response
+      const errorData = await response.json();
+      console.error('❌ ERROR Response from SendGrid:', errorData);
+      
+      throw {
+        message: 'Failed to send email',
+        code: response.status,
+        response: {
+          body: errorData
+        }
+      };
+    }
   } catch (error) {
     console.error('❌ ERROR: Failed to send email with SendGrid');
-    console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
     
-    if (error.response) {
-      console.error('Error status:', error.response.status);
+    if (error.code) console.error('Error code:', error.code);
+    if (error.message) console.error('Error message:', error.message);
+    
+    if (error.response?.body) {
       console.error('Error body:', JSON.stringify(error.response.body));
-      console.error('Error headers:', JSON.stringify(error.response.headers));
     }
     
     // Throw a clear error for the frontend
