@@ -14,7 +14,7 @@ const PersonManager = () => {
         <div className="grid grid-cols-5 gap-6 items-start">
           {/* Create Person Button Circle */}
           <div className="flex flex-col items-center cursor-pointer group">
-            <div className="h-20 w-20 rounded-full bg-neutral-50 flex items-center justify-center group-hover:bg-primary-50 transition-colors duration-200 overflow-hidden">
+            <div className="h-20 w-20 rounded-full bg-neutral-50 flex items-center justify-center group-hover:bg-primary-50 transition-colors duration-200 overflow-hidden mt-4">
               <img 
                 src={createPersonIcon} 
                 alt="Create Person" 
