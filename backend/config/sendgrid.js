@@ -45,7 +45,7 @@ const sendEmail = async (to, subject, htmlContent, from = FROM_EMAIL || 'noreply
       }],
       mail_settings: {
         sandbox_mode: {
-          enable: true
+          enable: false
         }
       }
     };
@@ -72,7 +72,7 @@ const sendEmail = async (to, subject, htmlContent, from = FROM_EMAIL || 'noreply
         success: true,
         messageId: `direct_${Date.now()}`,
         statusCode: response.status,
-        sandboxMode: true
+        sandboxMode: false
       };
     } else {
       // Handle error response
