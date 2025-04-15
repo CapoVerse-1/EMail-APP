@@ -2,89 +2,100 @@ const { google } = require('googleapis');
 const path = require('path');
 const fs = require('fs');
 
-// Service Account configuration
+// Service account file path
+const CREDENTIALS_PATH = path.join(__dirname, '../credentials/autoemail-456821-cd3dd049ae75.json');
+
+// Get Google Auth client - first try service account, then fallback to simulation
 const getAuth = async () => {
-  // For Vercel (using environment variable)
-  if (process.env.GOOGLE_SERVICE_ACCOUNT) {
-    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
-    return new google.auth.GoogleAuth({
-      credentials,
-      scopes: ['https://www.googleapis.com/auth/gmail.send']
-    });
-  } 
-  // Local (using file)
-  else {
-    const CREDENTIALS_PATH = path.join(__dirname, '../credentials/autoemail-456821-cd3dd049ae75.json');
-    return new google.auth.GoogleAuth({
-      keyFile: CREDENTIALS_PATH,
-      scopes: ['https://www.googleapis.com/auth/gmail.send']
-    });
+  try {
+    console.log('Attempting to use service account from:', CREDENTIALS_PATH);
+    
+    // Verify if credentials file exists
+    if (fs.existsSync(CREDENTIALS_PATH)) {
+      console.log('Service account credentials found');
+      
+      // Create auth client with the service account
+      const auth = new google.auth.GoogleAuth({
+        keyFile: CREDENTIALS_PATH,
+        scopes: ['https://www.googleapis.com/auth/gmail.send']
+      });
+      
+      return auth;
+    } else {
+      console.warn('Service account file not found at:', CREDENTIALS_PATH);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error creating auth client:', error);
+    return null;
   }
 };
 
-// Simplified email sending function that doesn't rely on Gmail API
-const sendEmail = async (to, subject, content, from = 'noreply@example.com') => {
-  // Log the attempt for debugging
-  console.log(`Email would be sent to: ${to}`);
-  console.log(`Subject: ${subject}`);
-  console.log(`Content: ${content.substring(0, 100)}...`);
+// Gmail API client creator
+const getGmailClient = async () => {
+  try {
+    // Try to get real auth client
+    const auth = await getAuth();
+    
+    if (auth) {
+      // Get credentials
+      const authClient = await auth.getClient();
+      console.log('Successfully created Gmail API client with service account');
+      
+      // Create real Gmail client
+      return google.gmail({ version: 'v1', auth: authClient });
+    }
+  } catch (error) {
+    console.error('Failed to create real Gmail client:', error);
+  }
   
-  // In a real implementation, you'd use a service like Nodemailer, SendGrid, etc.
-  // For now, simulate successful sending
-  return {
-    success: true,
-    messageId: `msg_${Date.now()}`,
-    recipient: to,
-    subject: subject
-  };
+  // Fallback to mock client
+  console.log('Using simulated Gmail client as fallback');
+  return getMockGmailClient();
 };
 
-// Gmail API Client - simplified mock that doesn't require authentication
-const getGmailClient = async () => {
+// Mock Gmail client for testing/fallback
+const getMockGmailClient = () => {
   return {
     users: {
       messages: {
         send: async ({ userId, requestBody }) => {
+          console.log('SIMULATION MODE: Mocking email send with Gmail API');
+          console.log(`User ID: ${userId}`);
+          
           try {
-            // Log the attempt
-            console.log(`Simulating email send for user: ${userId}`);
-            
-            // Extract email details from the requestBody
-            const raw = requestBody.raw;
-            const decodedRaw = Buffer.from(raw, 'base64').toString('utf8');
-            
-            // Extract recipient using regex
-            const toMatch = decodedRaw.match(/To: ([^\n]+)/);
-            const to = toMatch ? toMatch[1].trim() : 'unknown@example.com';
-            
-            // Extract subject - handle both encoded and plain subjects
-            let subject = 'No Subject';
-            const subjectMatch = decodedRaw.match(/Subject: ([^\n]+)/);
-            if (subjectMatch) {
-              const encodedSubject = subjectMatch[1].trim();
-              if (encodedSubject.includes('=?utf-8?B?')) {
-                const base64Part = encodedSubject.match(/=\?utf-8\?B\?([^?]+)\?=/);
-                if (base64Part && base64Part[1]) {
-                  subject = Buffer.from(base64Part[1], 'base64').toString('utf8');
-                }
-              } else {
-                subject = encodedSubject;
-              }
+            // Extract email content (simplified)
+            const raw = requestBody.raw || '';
+            let emailString = '';
+            try {
+              emailString = Buffer.from(raw, 'base64').toString('utf8');
+            } catch (error) {
+              console.error('Error decoding email content:', error);
             }
             
-            // Extract content (everything after headers)
-            const contentParts = decodedRaw.split('\n\n');
-            const content = contentParts.length > 1 ? contentParts.slice(1).join('\n\n') : '';
+            // Extract recipient
+            const toMatch = emailString.match(/To: ([^\n]+)/);
+            const to = toMatch ? toMatch[1].trim() : 'unknown@example.com';
             
-            // Call the simple sendEmail function
-            const result = await sendEmail(to, subject, content);
-            return { data: { id: result.messageId } };
-          } catch (error) {
-            console.error('Error in simulated email sending:', error);
+            // Extract subject
+            const subjectMatch = emailString.match(/Subject: ([^\n]+)/);
+            const subject = subjectMatch ? subjectMatch[1].trim() : 'No Subject';
+            
+            console.log(`Simulated email send to: ${to}`);
+            console.log(`Subject: ${subject}`);
+            
             return { 
               data: { 
-                id: `error_${Date.now()}`, 
-                error: error.message 
+                id: `simulated_${Date.now()}`,
+                threadId: `thread_${Date.now()}`
+              } 
+            };
+          } catch (error) {
+            console.error('Error in mock Gmail client:', error);
+            return { 
+              data: { 
+                id: `error_${Date.now()}`,
+                threadId: `thread_${Date.now()}`
               } 
             };
           }
@@ -94,4 +105,4 @@ const getGmailClient = async () => {
   };
 };
 
-module.exports = { getGmailClient, sendEmail }; 
+module.exports = { getGmailClient }; 
