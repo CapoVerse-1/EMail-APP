@@ -2,7 +2,7 @@
 import { createSentEmail } from './supabaseService';
 
 // API endpoint - make sure it matches the backend port
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'http://localhost:5000/api';
 
 // Get the Gmail API key from local storage
 const getGmailApiKey = () => {
