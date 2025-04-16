@@ -11,7 +11,7 @@ const PersonManager = () => {
   return (
     <div>
       <h2 className="text-xl font-semibold text-neutral-800 mb-6">Persons</h2>
-      <div className="flex justify-center">
+      <div className="flex">
         <div className="grid grid-cols-5 gap-6 items-start">
           {/* Create Person Button Circle - Minimalistic Style */}
           <div className="flex flex-col items-center cursor-pointer group">
