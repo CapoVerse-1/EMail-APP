@@ -27,8 +27,8 @@ const PersonManager = () => {
           {/* Placeholder Person Circles - Minimalistic Style */}
           {placeholderCircles.map((_, index) => (
             <div key={index} className="flex flex-col items-center">
-              {/* Simple solid light gray circle */}
-              <div className="h-28 w-28 rounded-full bg-neutral-100"> 
+              {/* Match size to Create Person circle */}
+              <div className="h-20 w-20 rounded-full bg-neutral-100">
                 {/* Intentionally empty */}
               </div>
               {/* Optional: Add placeholder text if needed later */}
